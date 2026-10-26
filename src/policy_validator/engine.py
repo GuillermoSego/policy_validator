@@ -50,6 +50,18 @@ class BatchAggregates:
     )
     otc_by_trip: dict[str, float] = field(default_factory=lambda: defaultdict(float))
     baggage_by_ref: dict[str, float] = field(default_factory=lambda: defaultdict(float))
+    # receipt_id -> the TIME-03 split it belongs to
+    splits: dict[str, SplitGroup] = field(default_factory=dict)
+
+
+@dataclass
+class SplitGroup:
+    """TIME-03: receipts each at or below a threshold that together exceed it."""
+
+    receipt_ids: list[str] = field(default_factory=list)
+    replaced: set[str] = field(default_factory=set)  # threshold rules the split replaces
+    gift_recipients: set[str] = field(default_factory=set)  # GIFT-01 recipients split around
+    reasons: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -250,32 +262,43 @@ def alc_03(ctx: ReceiptContext) -> RuleHit | None:
 # --- Meals (MEAL-01, MEAL-02, REG-02, REG-03) ----------------------------------------------------
 
 
+MEAL_CAP_RULE = {"GLOBAL": "MEAL-01", "APAC": "REG-02", "EMEA": "REG-03"}
+MealEntry = tuple[str, float, bool, "float | None"]  # receipt_id, per person, intl, EUR rate
+
+
+def _meal_cap(entity: str, entries: list[MealEntry], home_known: bool) -> tuple[float, str] | str:
+    """The daily per-person cap that applies to an employee's meal receipts, with a label.
+    Returns a string explaining why the cap is unknown (ADR-018, ADR-025)."""
+    if entity == "APAC":
+        return pc.APAC_MEAL_CAP_USD, f"{_money(pc.APAC_MEAL_CAP_USD)} APAC"
+    if entity == "EMEA":
+        rate = next((rate for *_, rate in entries if rate is not None), None)
+        if rate is None:
+            return "No EUR rate for this date; the EUR 70 cap cannot be checked."
+        cap = pc.EMEA_MEAL_CAP_EUR * rate
+        return cap, f"EUR {pc.EMEA_MEAL_CAP_EUR:g} ({_money(cap)}) EMEA"
+    if not home_known:
+        return "Unknown home currency for the employee's country; cap unknown."
+    international = any(intl for _, _, intl, _ in entries)
+    cap = pc.MEAL_CAP_INTERNATIONAL_USD if international else pc.MEAL_CAP_DOMESTIC_USD
+    return cap, f"{_money(cap)} {'international' if international else 'domestic'}"
+
+
 def _meal_cap_hit(ctx: ReceiptContext, rule_id: str) -> RuleHit | None:
     r = ctx.receipt
     if not ctx.is_meal_receipt or r.date is None:
         return None
+    split = ctx.batch.splits.get(r.receipt_id)
+    if split and rule_id in split.replaced:
+        return None  # TIME-03 reports the split instead of the breach
     day = ctx.batch.meal_days.get((r.employee_id, r.date), [])
+    cap = _meal_cap(r.entity, day, ctx.home_currency is not None)
+    if isinstance(cap, str):
+        return _signal(rule_id, cap)
+    cap_usd, label = cap
     day_total = sum(per_person for _, per_person, _, _ in day)
-    receipts = ", ".join(rid for rid, *_ in day)
-
-    if rule_id == "MEAL-01":
-        if ctx.home_currency is None:
-            return _signal(
-                "MEAL-01", f"Unknown home currency for country {r.employee_country}; cap unknown."
-            )
-        international = any(intl for _, _, intl, _ in day)
-        cap = pc.MEAL_CAP_INTERNATIONAL_USD if international else pc.MEAL_CAP_DOMESTIC_USD
-        label = f"{_money(cap)} {'international' if international else 'domestic'}"
-    elif rule_id == "REG-02":
-        cap, label = pc.APAC_MEAL_CAP_USD, f"{_money(pc.APAC_MEAL_CAP_USD)} APAC"
-    else:  # REG-03
-        rate = next((rate for *_, rate in day if rate is not None), None)
-        if rate is None:
-            return _signal("REG-03", "No EUR rate for this date; the EUR 70 cap cannot be checked.")
-        cap = pc.EMEA_MEAL_CAP_EUR * rate
-        label = f"EUR {pc.EMEA_MEAL_CAP_EUR:g} ({_money(cap)}) EMEA"
-
-    if _over(day_total, cap):
+    if _over(day_total, cap_usd):
+        receipts = ", ".join(rid for rid, *_ in day)
         return _exception(
             rule_id,
             f"{_money(day_total)} per person on {r.date} (receipts: {receipts}) against the "
@@ -435,6 +458,10 @@ def gift_01(ctx: ReceiptContext) -> RuleHit | None:
         recipient = (item.attributes.recipient or "").strip().lower()
         (named[recipient] if recipient else unnamed).append(item)
 
+    split = ctx.batch.splits.get(ctx.receipt.receipt_id)
+    for recipient in split.gift_recipients if split else ():
+        named.pop(recipient, None)  # TIME-03 reports the split instead of the breach
+
     flagged: list[ClassifiedItem] = []
     reasons: list[str] = []
     for items in named.values():
@@ -571,6 +598,9 @@ def laundry_01(ctx: ReceiptContext) -> RuleHit | None:
 def doc_01(ctx: ReceiptContext) -> RuleHit | None:
     r = ctx.receipt
     total = r.total_amount_usd or 0.0
+    split = ctx.batch.splits.get(r.receipt_id)
+    if split and "DOC-01" in split.replaced:
+        return None  # TIME-03 reports the split instead of the breach
     if not r.itemized and _over(total, pc.ITEMIZATION_THRESHOLD_USD):
         return _exception(
             "DOC-01",
@@ -640,6 +670,117 @@ def reg_04(ctx: ReceiptContext) -> RuleHit | None:
     return None
 
 
+# --- Transaction patterns (TIME-01..TIME-03) ----------------------------------------------------
+# TIME-04 needs trip start and end dates, which trip records in this data do not hold (ADR-040).
+
+
+@rule("TIME-01")
+def time_01(ctx: ReceiptContext) -> RuleHit | None:
+    when = ctx.receipt.transaction_datetime
+    if when and int(when[11:13]) < pc.OVERNIGHT_END_HOUR:
+        return _signal(
+            "TIME-01", f"Local transaction time {when[11:16]} is in the 00:00-05:00 window."
+        )
+    return None
+
+
+@rule("TIME-02")
+def time_02(ctx: ReceiptContext) -> RuleHit | None:
+    r = ctx.receipt
+    if r.submitted_expense_type in pc.INDIVIDUAL_TRAVEL_TYPES and r.trip_id is None:
+        return _signal(
+            "TIME-02", f"{r.submitted_expense_type} expense with no associated trip record."
+        )
+    return None
+
+
+@rule("TIME-03")
+def time_03(ctx: ReceiptContext) -> RuleHit | None:
+    split = ctx.batch.splits.get(ctx.receipt.receipt_id)
+    if split:
+        return _exception("TIME-03", "; ".join(split.reasons) + ".")
+    return None
+
+
+def _detect_splits(contexts: list[ReceiptContext], batch: BatchAggregates) -> None:
+    """TIME-03: same employee, same merchant name, same calendar date; each receipt at or below a
+    threshold, together above it. Thresholds: DOC-01 itemization (all non-itemized), the
+    employee's per-person meal cap, and the GIFT-01 cap for one recipient."""
+    groups: dict[tuple, list[ReceiptContext]] = defaultdict(list)
+    for ctx in contexts:
+        r = ctx.receipt
+        if r.merchant_name and r.date:
+            key = (r.employee_id, " ".join(r.merchant_name.lower().split()), r.date)
+            groups[key].append(ctx)
+
+    def mark(members: list[ReceiptContext], rule_id: str | None, reason: str, **extra) -> None:
+        ids = [m.receipt.receipt_id for m in members]
+        for m in members:
+            split = batch.splits.setdefault(m.receipt.receipt_id, SplitGroup())
+            split.receipt_ids = sorted(set(split.receipt_ids) | set(ids))
+            if rule_id:
+                split.replaced.add(rule_id)
+            split.gift_recipients |= extra.get("gift_recipients", set())
+            split.reasons.append(f"{reason} (receipts: {', '.join(ids)})")
+
+    def is_split(amounts: list[float], cap: float) -> bool:
+        return all(not _over(a, cap) for a in amounts) and _over(sum(amounts), cap)
+
+    for group in (g for g in groups.values() if len(g) > 1):
+        merchant, date = group[0].receipt.merchant_name, group[0].receipt.date
+
+        if all(not c.receipt.itemized for c in group):
+            totals = [c.receipt.total_amount_usd or 0.0 for c in group]
+            if is_split(totals, pc.ITEMIZATION_THRESHOLD_USD):
+                mark(
+                    group,
+                    "DOC-01",
+                    f"Non-itemized receipts at {merchant} on {date} total {_money(sum(totals))}, "
+                    f"above the {_money(pc.ITEMIZATION_THRESHOLD_USD)} itemization threshold",
+                )
+
+        meals = [c for c in group if c.is_meal_receipt]
+        if len(meals) > 1:
+            entries = [
+                (c.receipt.receipt_id, c.meal_per_person_usd, c.is_international, c.eur_rate)
+                for c in meals
+            ]
+            first = meals[0]
+            cap = _meal_cap(first.receipt.entity, entries, first.home_currency is not None)
+            per_person = [e[1] for e in entries]
+            if not isinstance(cap, str) and is_split(per_person, cap[0]):
+                mark(
+                    meals,
+                    MEAL_CAP_RULE[first.receipt.entity],
+                    f"Meals at {merchant} on {date} total {_money(sum(per_person))} per person, "
+                    f"each at or below the {cap[1]} cap",
+                )
+
+        by_recipient: dict[str, dict[str, float]] = defaultdict(dict)
+        for c in group:
+            for item in _gift_items(c):
+                name = (item.attributes.recipient or "").strip().lower()
+                if name and item.attributes.recipient_type not in (
+                    "government_official",
+                    "employee",
+                ):
+                    spend = by_recipient[name]
+                    spend[c.receipt.receipt_id] = (
+                        spend.get(c.receipt.receipt_id, 0.0) + item.amount_usd
+                    )
+        for name, spend in by_recipient.items():
+            if len(spend) > 1 and is_split(list(spend.values()), pc.GIFT_CAP_PER_RECIPIENT_USD):
+                members = [c for c in group if c.receipt.receipt_id in spend]
+                mark(
+                    members,
+                    None,
+                    f"Gifts for {name} at {merchant} on {date} total "
+                    f"{_money(sum(spend.values()))}, above the "
+                    f"{_money(pc.GIFT_CAP_PER_RECIPIENT_USD)} per-recipient cap",
+                    gift_recipients={name},
+                )
+
+
 # --- Batch evaluation ----------------------------------------------------------------------------
 
 
@@ -658,6 +799,7 @@ def _build_aggregates(contexts: list[ReceiptContext]) -> BatchAggregates:
         if ctx.approval_type == "baggage_delay" and r.pre_approval_ref:
             spend = sum(i.amount_usd for i in ctx.of("personal_care", "clothing"))
             batch.baggage_by_ref[r.pre_approval_ref] += spend
+    _detect_splits(contexts, batch)
     return batch
 
 

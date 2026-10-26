@@ -42,6 +42,7 @@ SEVERITY = {
     "TECH-02": "medium",
     "TECH-03": "high",
     "TECH-04": "low",
+    "TIME-03": "high",
 }
 HEALTH_01_PRESCRIPTION_SEVERITY = "medium"
 
@@ -81,10 +82,14 @@ OTC_TRIP_CAP_USD = 25.0  # HEALTH-01
 BAGGAGE_DELAY_ALLOWANCE_USD = 150.0  # PERS-01 / PERS-02
 LAUNDRY_MIN_TRIP_NIGHTS = 4  # LAUNDRY-01
 ITEMIZATION_THRESHOLD_USD = 75.0  # DOC-01
+OVERNIGHT_END_HOUR = 5  # TIME-01: 00:00 up to, not including, 05:00
 
 # --- Lookup tables -------------------------------------------------------------------------------
 MEAL_EXPENSE_TYPES = frozenset({"Meals - Individual", "Meals - Team", "Client Entertainment"})
 MEAL_SPEND_CATEGORIES = frozenset({"food_beverage", "alcohol", "service_fee"})  # MEAL-01
+
+# TIME-02: individual travel expense types.
+INDIVIDUAL_TRAVEL_TYPES = frozenset({"Meals - Individual", "Lodging", "Travel - Other"})
 
 # ALC-01/ALC-02 scope: alcohol served on the premises (ALC scope note, MCC-03).
 ON_PREMISE_ALCOHOL_MCCS = frozenset({"5812", "5813", "7011"})

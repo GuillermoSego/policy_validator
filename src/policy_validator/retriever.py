@@ -13,8 +13,9 @@ from collections import OrderedDict
 from .models import ClassifiedItem, Receipt, RetrievedRule
 from .policy_registry import load_registry
 
-# Rules every receipt is checked against (documentation and merchant risk).
-ALWAYS = ("DOC-01", "DOC-02", "DOC-03", "MCC-01", "MCC-02")
+# Rules every receipt is checked against: documentation, merchant risk and transaction patterns
+# (timing and splitting depend on when and where, not on what was bought).
+ALWAYS = ("DOC-01", "DOC-02", "DOC-03", "MCC-01", "MCC-02", "TIME-01", "TIME-03")
 
 CATEGORY_RULES = {
     "alcohol": ("ALC-01", "ALC-02", "ALC-03"),
@@ -43,10 +44,12 @@ ATTRIBUTE_RULES = {
 }
 
 EXPENSE_TYPE_RULES = {
-    "Meals - Individual": ("MEAL-01", "MEAL-02"),
+    "Meals - Individual": ("MEAL-01", "MEAL-02", "TIME-02"),
     "Meals - Team": ("MEAL-01", "MEAL-02"),
     "Client Entertainment": ("MEAL-01", "MEAL-02", "ALC-01", "ENT-01", "GIFT-04"),
     "Client Gifts": ("GIFT-01", "GIFT-02", "GIFT-03", "GIFT-04"),
+    "Lodging": ("TIME-02",),
+    "Travel - Other": ("TIME-02",),
     "Software": ("TECH-04",),
     "Computer Equipment": ("TECH-01", "TECH-02", "TECH-03", "TECH-04"),
 }
