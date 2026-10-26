@@ -437,7 +437,7 @@ def gift_01(ctx: ReceiptContext) -> RuleHit | None:
 
     flagged: list[ClassifiedItem] = []
     reasons: list[str] = []
-    for recipient, items in named.items():
+    for items in named.values():
         total = sum(i.amount_usd for i in items)
         if _over(total, pc.GIFT_CAP_PER_RECIPIENT_USD):
             flagged += items
