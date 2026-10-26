@@ -1386,6 +1386,447 @@
       }
     }
   },
+  "ablation": {
+    "classification": {
+      "items": 65,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_category_f1": {
+        "alcohol": 1.0,
+        "clothing": 1.0,
+        "computer_accessory": 1.0,
+        "food_beverage": 1.0,
+        "gift": 1.0,
+        "gift_card": 1.0,
+        "ground_transport": 1.0,
+        "health_otc": 1.0,
+        "household_goods": 1.0,
+        "jewelry": 1.0,
+        "laundry_service": 1.0,
+        "lodging": 1.0,
+        "office_supplies": 1.0,
+        "other": 1.0,
+        "personal_care": 1.0,
+        "personal_electronics": 1.0,
+        "service_fee": 1.0,
+        "software_subscription": 1.0,
+        "tobacco": 1.0
+      },
+      "restricted_f1": 1.0,
+      "errors": []
+    },
+    "disposition": {
+      "confusion": {
+        "flag": {
+          "flag": 16,
+          "review": 0,
+          "pass": 0
+        },
+        "review": {
+          "flag": 0,
+          "review": 3,
+          "pass": 0
+        },
+        "pass": {
+          "flag": 0,
+          "review": 0,
+          "pass": 9
+        }
+      },
+      "accuracy": 1.0,
+      "false_positives": {
+        "count": 0,
+        "of": 9,
+        "receipts": []
+      },
+      "missed_violations": {
+        "count": 0,
+        "of": 16,
+        "receipts": []
+      },
+      "wrong": []
+    },
+    "exceptions": {
+      "overall": {
+        "tp": 26,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "per_rule": {
+        "ALC-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-03": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-03": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "HOUSE-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "LAUNDRY-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MCC-01": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MEAL-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-03": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "REG-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "evidence_exact": 1.0,
+      "review_signals": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "retriever_recall": 1.0
+    },
+    "stretch_all_32": {
+      "disposition": {
+        "confusion": {
+          "flag": {
+            "flag": 18,
+            "review": 0,
+            "pass": 0
+          },
+          "review": {
+            "flag": 0,
+            "review": 5,
+            "pass": 0
+          },
+          "pass": {
+            "flag": 0,
+            "review": 0,
+            "pass": 9
+          }
+        },
+        "accuracy": 1.0,
+        "false_positives": {
+          "count": 0,
+          "of": 9,
+          "receipts": []
+        },
+        "missed_violations": {
+          "count": 0,
+          "of": 18,
+          "receipts": []
+        },
+        "wrong": []
+      },
+      "exceptions": {
+        "overall": {
+          "tp": 28,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "per_rule": {
+          "ALC-01": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "ALC-02": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "ALC-03": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "DOC-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "DOC-03": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "GIFT-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "GIFT-02": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "GIFT-04": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "HOUSE-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "LAUNDRY-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "MCC-01": {
+            "tp": 3,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "MEAL-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "PERS-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "PERS-02": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "PERS-03": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "REG-01": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "TECH-01": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "TECH-02": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "TECH-04": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "TIME-03": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        },
+        "evidence_exact": 1.0,
+        "review_signals": {
+          "tp": 9,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "retriever_recall": 1.0
+      }
+    },
+    "threshold_sensitivity": {
+      "0.4": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.5": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.6": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.7": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      }
+    },
+    "confidence": {
+      "min_confidence_correct": 0.85,
+      "max_confidence_wrong": null,
+      "histogram": {
+        "0.85": 1,
+        "0.9": 1,
+        "0.95": 47,
+        "0.98": 9,
+        "0.99": 6,
+        "1.0": 1
+      }
+    }
+  },
   "legacy_keyword_flagging": {
     "disposition": {
       "confusion": {

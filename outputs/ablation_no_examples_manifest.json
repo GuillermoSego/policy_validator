@@ -1,0 +1,27 @@
+{
+  "model": "anthropic/claude-haiku-4.5",
+  "temperature": 0.0,
+  "confidence_threshold": 0.5,
+  "prompt_versions": {
+    "normaliser": "normaliser-v1",
+    "classifier": "classifier-v1-no-examples"
+  },
+  "llm_calls": 37,
+  "prompt_tokens": 59624,
+  "completion_tokens": 7829,
+  "cost_usd": 0.098769,
+  "by_stage": {
+    "classifier": {
+      "calls": 31,
+      "prompt_tokens": 56603,
+      "completion_tokens": 7467,
+      "cost_usd": 0.093938
+    },
+    "normaliser": {
+      "calls": 6,
+      "prompt_tokens": 3021,
+      "completion_tokens": 362,
+      "cost_usd": 0.004831
+    }
+  }
+}

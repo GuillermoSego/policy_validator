@@ -65,3 +65,21 @@ def test_offline_replay_reproduces_committed_results():
     assert llm.usage.cache_hits == llm.usage.calls
     committed = read_results(OUTPUTS_DIR / "results.jsonl")
     assert [r.model_dump() for r in results] == [r.model_dump() for r in committed]
+
+
+def test_ablation_prompt_only_removes_identification_examples():
+    from policy_validator.prompts import _IDENTIFICATION_EXAMPLES, classifier_system
+
+    full, ablated = classifier_system(), classifier_system(identification_examples=False)
+    assert full.replace(_IDENTIFICATION_EXAMPLES, "", 1) == ablated
+    for example in ("rum cake", "Arnold Palmer", "virgin mojito", "beer-battered"):
+        assert example in full and example not in ablated
+    assert "not by the words in its name" in ablated
+
+
+def test_offline_replay_reproduces_committed_ablation():
+    settings = dataclasses.replace(load_settings(), api_key=None)
+    results, llm = run_pipeline(settings, identification_examples=False)
+    assert llm.usage.cache_hits == llm.usage.calls
+    committed = read_results(OUTPUTS_DIR / "ablation_no_examples_results.jsonl")
+    assert [r.model_dump() for r in results] == [r.model_dump() for r in committed]
