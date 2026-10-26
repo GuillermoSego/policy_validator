@@ -196,6 +196,40 @@ def confidence_summary(results: dict[str, ReceiptResult], gold, ids) -> dict:
     }
 
 
+# --- Two-model agreement (ADR-043) --------------------------------------------------------------
+
+# Item facts that change a rule outcome (ADR-014). `self` vs `unknown` changes nothing.
+RULE_FACTS = ("is_gift", "is_prescription", "is_mobile_handset", "is_entertainment_venue")
+
+
+def _rule_relevant_facts(item: ClassifiedItem) -> tuple:
+    a = item.attributes
+    special = a.recipient_type if a.recipient_type in ("government_official", "employee") else None
+    return (*(getattr(a, f) for f in RULE_FACTS), bool(a.recipient), special)
+
+
+def model_agreement(primary: dict[str, ReceiptResult], secondary: dict[str, ReceiptResult]) -> dict:
+    from .agreement import disagreements
+
+    pairs = [
+        (a, b)
+        for rid in primary
+        for a, b in zip(primary[rid].line_items, secondary[rid].line_items, strict=True)
+    ]
+    fact_diffs = [a.line_id for a, b in pairs if _rule_relevant_facts(a) != _rule_relevant_facts(b)]
+    return {
+        "models": [
+            next(iter(primary.values())).model_id,
+            next(iter(secondary.values())).model_id,
+        ],
+        "items": len(pairs),
+        "category_agreement": sum(a.category == b.category for a, b in pairs) / len(pairs),
+        "category_disagreements": disagreements(primary, secondary),
+        "rule_relevant_fact_disagreements": fact_diffs,
+        "any_fact_difference": sum(a.attributes != b.attributes for a, b in pairs),
+    }
+
+
 # --- Orchestration -------------------------------------------------------------------------------
 
 
@@ -224,6 +258,9 @@ def evaluate(
                 r, gold, ids, thresholds
             )
             report[scored.system]["confidence"] = confidence_summary(r, gold, ids)
+    by_name = {s.system: s.results for s in systems}
+    if "pipeline" in by_name and "second_model" in by_name:
+        report["model_agreement"] = model_agreement(by_name["pipeline"], by_name["second_model"])
     if legacy is not None:
         report["legacy_keyword_flagging"] = {"disposition": disposition_metrics(legacy, gold, ids)}
     return report
@@ -237,10 +274,13 @@ def _pct(x: float | None) -> str:
 
 
 def render_markdown(report: dict) -> str:
-    systems = [s for s in ("pipeline", "ablation", "baseline", "oracle") if s in report]
+    order = ("pipeline", "ablation", "second_model", "agreement", "baseline", "oracle")
+    systems = [s for s in order if s in report]
     names = {
         "pipeline": "Pipeline (LLM)",
         "ablation": "Prompt ablation (no identification examples)",
+        "second_model": "Second model (Gemini 2.5 Flash)",
+        "agreement": "Two-model agreement as EXC-03 confidence",
         "baseline": "Keyword baseline + same engine",
         "oracle": "Oracle ablation (gold categories)",
     }
@@ -290,6 +330,24 @@ def render_markdown(report: dict) -> str:
         )
         + ".",
     ]
+
+    if "model_agreement" in report:
+        a = report["model_agreement"]
+        lines += [
+            "",
+            f"Two-model agreement ({' vs '.join(a['models'])}, all {a['items']} items): category "
+            f"agreement {_pct(a['category_agreement'])}; category disagreements: "
+            + (
+                ", ".join(
+                    f"{d['line_id']} ({d['primary']} vs {d['secondary']})"
+                    for d in a["category_disagreements"]
+                )
+                or "none"
+            )
+            + "; disagreements on rule-relevant item facts: "
+            + (", ".join(a["rule_relevant_fact_disagreements"]) or "none")
+            + f"; items with any fact difference: {a['any_fact_difference']}.",
+        ]
 
     if "legacy_keyword_flagging" in report:
         d = report["legacy_keyword_flagging"]["disposition"]

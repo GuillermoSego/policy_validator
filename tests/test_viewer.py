@@ -11,7 +11,14 @@ VIEWER = str(ROOT / "app" / "viewer.py")
 @pytest.mark.parametrize("view", ["Receipt list", "Receipt detail", "Metrics"])
 @pytest.mark.parametrize(
     "system",
-    ["Pipeline (LLM)", "Prompt ablation (no examples)", "Keyword baseline", "Oracle ablation"],
+    [
+        "Pipeline (LLM)",
+        "Prompt ablation (no examples)",
+        "Second model (Gemini Flash)",
+        "Two-model agreement",
+        "Keyword baseline",
+        "Oracle ablation",
+    ],
 )
 def test_viewer_pages_render(view, system):
     app = AppTest.from_file(VIEWER, default_timeout=30).run()

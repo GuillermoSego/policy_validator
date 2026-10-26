@@ -18,6 +18,8 @@ from policy_validator.reporter import read_results
 SYSTEM_FILES = {
     "Pipeline (LLM)": "results.jsonl",
     "Prompt ablation (no examples)": "ablation_no_examples_results.jsonl",
+    "Second model (Gemini Flash)": "second_model_results.jsonl",
+    "Two-model agreement": "agreement_results.jsonl",
     "Keyword baseline": "baseline_results.jsonl",
     "Oracle ablation": "oracle_results.jsonl",
 }
