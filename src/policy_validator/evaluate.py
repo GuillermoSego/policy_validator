@@ -219,7 +219,7 @@ def evaluate(
             ),
             "exceptions": exception_metrics(r, gold, all_ids),
         }
-        if scored.system == "pipeline":
+        if scored.system in ("pipeline", "ablation"):
             report[scored.system]["threshold_sensitivity"] = threshold_sensitivity(
                 r, gold, ids, thresholds
             )
@@ -237,9 +237,10 @@ def _pct(x: float | None) -> str:
 
 
 def render_markdown(report: dict) -> str:
-    systems = [s for s in ("pipeline", "baseline", "oracle") if s in report]
+    systems = [s for s in ("pipeline", "ablation", "baseline", "oracle") if s in report]
     names = {
         "pipeline": "Pipeline (LLM)",
+        "ablation": "Prompt ablation (no identification examples)",
         "baseline": "Keyword baseline + same engine",
         "oracle": "Oracle ablation (gold categories)",
     }
@@ -345,20 +346,20 @@ def render_markdown(report: dict) -> str:
                 f"| {_pct(m['recall'])} |"
             )
 
-    if "threshold_sensitivity" in report.get("pipeline", {}):
+    for s in (s for s in systems if "threshold_sensitivity" in report[s]):
         lines += [
             "",
-            "## EXC-03 threshold sensitivity — pipeline",
+            f"## EXC-03 threshold sensitivity — {names[s]}",
             "",
             "| threshold | items below | EXC-03 signals | disposition accuracy |",
             "|---|---|---|---|",
         ]
-        for t, m in report["pipeline"]["threshold_sensitivity"].items():
+        for t, m in report[s]["threshold_sensitivity"].items():
             lines.append(
                 f"| {t} | {m['items_below_threshold']} | {m['exc_03_signals']} "
                 f"| {_pct(m['disposition_accuracy'])} |"
             )
-        c = report["pipeline"]["confidence"]
+        c = report[s]["confidence"]
         lines += [
             "",
             f"Lowest confidence on a correct item: {c['min_confidence_correct']}; highest "

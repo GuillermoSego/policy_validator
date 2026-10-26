@@ -17,6 +17,7 @@ from policy_validator.reporter import read_results
 
 SYSTEM_FILES = {
     "Pipeline (LLM)": "results.jsonl",
+    "Prompt ablation (no examples)": "ablation_no_examples_results.jsonl",
     "Keyword baseline": "baseline_results.jsonl",
     "Oracle ablation": "oracle_results.jsonl",
 }
