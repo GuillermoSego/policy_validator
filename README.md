@@ -150,14 +150,15 @@ Multilingual text and misleading names need language understanding, not long rea
 price allows many runs under the cap. Gemini 2.5 Flash, used only for the cross-model check, scored
 the same. Production stays on one model because a second doubles calls with no measured gain.
 
-**Total spend: $0.2224**:
+**Total spend: $0.2275**:
 - Pipeline: $0.1025 (37 calls, 62.8k input / 7.9k output tokens;
   [`run_manifest.json`](outputs/run_manifest.json)).
 - Prompt ablation: $0.0939.
 - Second model: $0.0260.
+- Rehearsing the demo's custom receipt: $0.0051 (2 calls, cached in the gitignored `.demo_cache/`).
 
-This equals the sum of the 105 cached responses and the key's usage delta on the OpenRouter
-dashboard ($0.0780 → $0.3004).
+This equals the sum of every cached response and the key's usage delta on the OpenRouter
+dashboard.
 
 ## Scope and limitations
 
