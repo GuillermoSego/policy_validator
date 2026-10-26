@@ -51,6 +51,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [040](#adr-040--time-04-not-implemented-no-trip-dates-in-the-data) | TIME-04 not implemented: no trip dates in the data | Accepted |
 | [041](#adr-041--time-03-split-semantics) | TIME-03 split semantics | Accepted |
 | [042](#adr-042--prompt-ablation-without-identification-examples) | Prompt ablation without identification examples | Accepted |
+| [043](#adr-043--second-model-and-two-model-agreement) | Second model and two-model agreement | Accepted |
 
 ---
 
@@ -189,8 +190,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   RCP-021, RCP-029 and RCP-030 from scoring.
 - **Decision:** v1 does not implement them. The four receipts are still processed (classification
   and the other rules run) but excluded from the metrics.
-- **Consequences:** Focus stays on the 28 scored receipts. The rules can be added later as
-  deterministic engine functions without touching the LLM stages.
+- **Consequences:** Focus stayed on the 28 scored receipts while the core was built.
 
 ## ADR-014 — The LLM extracts facts, the engine decides
 
@@ -275,8 +275,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 - **Status:** Accepted
 - **Decision:** Prompts contain the full taxonomy with its examples and the policy's own
   identification principles ("classify by the nature of the item, not the words in its name"), but
-  no items from the dataset. If quality is insufficient, invented few-shot examples may be added via a
-  new ADR — never dataset items.
+  no items from the dataset. Any few-shot example must be invented, never taken from the dataset.
 - **Consequences:** No label leakage; reported scores are an honest estimate.
 
 ## ADR-022 — Keyword baseline feeds the same engine
@@ -394,8 +393,8 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 - **Decision:** With a valid baggage-delay reference, all `personal_care` and `clothing` lines share
   the $150 allowance. No baggage-delay prefix is documented (ADR-017), so the path is dormant on this
   dataset.
-- **Consequences:** Known limitation; the fix is an `is_essential_toiletry` attribute when real
-  baggage-delay references appear.
+- **Consequences:** Known limitation: the carve-out does not distinguish an essential toiletry
+  from other personal care such as a massage.
 
 ## ADR-035 — Non-itemized receipts bypass the classifier
 
@@ -425,8 +424,8 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   from 0.4 to 0.7 gives identical results.
 - **Decision:** Keep 0.5 as fixed before the run (ADR-004) rather than tune it on data that cannot
   inform it. Report the finding and the sensitivity table.
-- **Consequences:** EXC-03 is effectively untested on this dataset. The recommended next step is a
-  confidence derived from disagreement between two models or prompts.
+- **Consequences:** Self-reported confidence does not exercise EXC-03 on this dataset. Two-model
+  agreement was measured as an alternative confidence in ADR-043.
 
 ## ADR-038 — Offline replay is a test
 
@@ -458,7 +457,8 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   dictionary states trip records hold no dates.
 - **Decision:** Do not implement it; the `Receipt` model has no field it could read. A no-op rule
   would suggest coverage that does not exist.
-- **Consequences:** Adding `trip_start`/`trip_end` to the input would make it a ten-line rule.
+- **Consequences:** TIME-04 is outside what this data model can express; ADR-039 covers the other three
+  transaction-pattern rules.
 
 ## ADR-041 — TIME-03 split semantics
 
@@ -496,3 +496,30 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   confidence on "Rum cake slice" (0.95 → 0.85, still `food_beverage`). The examples were not
   load-bearing on this data. Production keeps them: they are policy text and cost nothing. The
   experiment cost $0.094, and its responses are committed, so it replays offline.
+
+## ADR-043 — Second model and two-model agreement
+
+- **Status:** Accepted
+- **Context:** Two questions remained. Does the result depend on the model? And can EXC-03 get a
+  confidence that carries signal, given that self-reported confidence never fell below 0.85
+  (ADR-037)?
+- **Decision:**
+  - Run the full pipeline a second time with `google/gemini-2.5-flash`: same prompts, same
+    engine, its own cached responses (`validator crossmodel`).
+  - Build a combined system that keeps Haiku's classification but sets an item's confidence to 0
+    when the two models disagree on its category, and to the lower of the two otherwise.
+  - Report both as their own systems. A test pins the mechanism: a forced disagreement on
+    RCP-010's beer removes ALC-01 and sends the receipt to review via EXC-03.
+  - Production stays on the single-model pipeline.
+- **Alternatives considered:** sampling the same model several times (correlated errors at
+  temperature 0); asking for a probability distribution (still self-reported).
+- **Consequences:**
+  - Gemini 2.5 Flash also scores 79/79 items and 32/32 receipts.
+  - The two models agree on every category. They differ only on facts no rule reads (`self` vs
+    `unknown` recipient type on 18 items, and how much of the recipient's name to quote on
+    RCP-018). The combined system is therefore identical to the pipeline and raises no EXC-03
+    signal.
+  - On this dataset, every item is unambiguous to both models. The EXC-03 path is exercised by
+    tests, not by the data.
+  - Keeping production on one model avoids doubling cost and latency for no measured gain.
+  - The run cost $0.026.
