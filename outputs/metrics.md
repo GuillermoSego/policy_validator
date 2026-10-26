@@ -5,22 +5,24 @@ Scope: 28 receipts; out of scope: RCP-020, RCP-021, RCP-029, RCP-030.
 
 ## Summary
 
-| Metric | Pipeline (LLM) | Prompt ablation (no identification examples) | Keyword baseline + same engine | Oracle ablation (gold categories) |
-|---|---|---|---|---|
-| Category macro F1 (65 items) | 1.000 | 1.000 | 0.869 | 1.000 |
-| Category accuracy | 100.0% | 100.0% | 84.6% | 100.0% |
-| Restricted F1 | 1.000 | 1.000 | 0.780 | 1.000 |
-| Disposition accuracy | 100.0% | 100.0% | 85.7% | 100.0% |
-| False positives (of 9 pass) | 0 | 0 | 2 | 0 |
-| Missed violations (of 16 flag) | 0 | 0 | 1 | 0 |
-| Exception precision | 100.0% | 100.0% | 88.0% | 100.0% |
-| Exception recall | 100.0% | 100.0% | 84.6% | 100.0% |
-| Evidence exact (matched exceptions) | 100.0% | 100.0% | 95.5% | 100.0% |
-| Review-signal precision | 100.0% | 100.0% | 100.0% | 100.0% |
-| Review-signal recall | 100.0% | 100.0% | 100.0% | 100.0% |
-| Retriever recall (gold rules) | 100.0% | 100.0% | 90.9% | 100.0% |
+| Metric | Pipeline (LLM) | Prompt ablation (no identification examples) | Second model (Gemini 2.5 Flash) | Two-model agreement as EXC-03 confidence | Keyword baseline + same engine | Oracle ablation (gold categories) |
+|---|---|---|---|---|---|---|
+| Category macro F1 (65 items) | 1.000 | 1.000 | 1.000 | 1.000 | 0.869 | 1.000 |
+| Category accuracy | 100.0% | 100.0% | 100.0% | 100.0% | 84.6% | 100.0% |
+| Restricted F1 | 1.000 | 1.000 | 1.000 | 1.000 | 0.780 | 1.000 |
+| Disposition accuracy | 100.0% | 100.0% | 100.0% | 100.0% | 85.7% | 100.0% |
+| False positives (of 9 pass) | 0 | 0 | 0 | 0 | 2 | 0 |
+| Missed violations (of 16 flag) | 0 | 0 | 0 | 0 | 1 | 0 |
+| Exception precision | 100.0% | 100.0% | 100.0% | 100.0% | 88.0% | 100.0% |
+| Exception recall | 100.0% | 100.0% | 100.0% | 100.0% | 84.6% | 100.0% |
+| Evidence exact (matched exceptions) | 100.0% | 100.0% | 100.0% | 100.0% | 95.5% | 100.0% |
+| Review-signal precision | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| Review-signal recall | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| Retriever recall (gold rules) | 100.0% | 100.0% | 100.0% | 100.0% | 90.9% | 100.0% |
 
-Stretch — all 32 receipts, including the four timing receipts (TIME-01..TIME-03): Pipeline (LLM): disposition 100.0%, exception recall 100.0%; Prompt ablation (no identification examples): disposition 100.0%, exception recall 100.0%; Keyword baseline + same engine: disposition 87.5%, exception recall 85.7%; Oracle ablation (gold categories): disposition 100.0%, exception recall 100.0%.
+Stretch — all 32 receipts, including the four timing receipts (TIME-01..TIME-03): Pipeline (LLM): disposition 100.0%, exception recall 100.0%; Prompt ablation (no identification examples): disposition 100.0%, exception recall 100.0%; Second model (Gemini 2.5 Flash): disposition 100.0%, exception recall 100.0%; Two-model agreement as EXC-03 confidence: disposition 100.0%, exception recall 100.0%; Keyword baseline + same engine: disposition 87.5%, exception recall 85.7%; Oracle ablation (gold categories): disposition 100.0%, exception recall 100.0%.
+
+Two-model agreement (anthropic/claude-haiku-4.5 vs google/gemini-2.5-flash, all 79 items): category agreement 100.0%; category disagreements: none; disagreements on rule-relevant item facts: none; items with any fact difference: 19.
 
 Legacy keyword flagging (no engine — flag on any restricted keyword): disposition accuracy 64.3%, false positives 2/9 (RCP-004, RCP-009), missed violations 5/16 (RCP-011, RCP-015, RCP-023, RCP-025, RCP-026).
 
@@ -33,6 +35,22 @@ Legacy keyword flagging (no engine — flag on any restricted keyword): disposit
 | **pass** | 0 | 0 | 9 |
 
 ## Disposition confusion — Prompt ablation (no identification examples)
+
+| gold \ predicted | flag | review | pass |
+|---|---|---|---|
+| **flag** | 16 | 0 | 0 |
+| **review** | 0 | 3 | 0 |
+| **pass** | 0 | 0 | 9 |
+
+## Disposition confusion — Second model (Gemini 2.5 Flash)
+
+| gold \ predicted | flag | review | pass |
+|---|---|---|---|
+| **flag** | 16 | 0 | 0 |
+| **review** | 0 | 3 | 0 |
+| **pass** | 0 | 0 | 9 |
+
+## Disposition confusion — Two-model agreement as EXC-03 confidence
 
 | gold \ predicted | flag | review | pass |
 |---|---|---|---|
@@ -63,6 +81,14 @@ Wrong: RCP-004 (pass→flag), RCP-009 (pass→flag), RCP-025 (flag→pass), RCP-
 None.
 
 ## Category errors — Prompt ablation (no identification examples)
+
+None.
+
+## Category errors — Second model (Gemini 2.5 Flash)
+
+None.
+
+## Category errors — Two-model agreement as EXC-03 confidence
 
 None.
 
@@ -110,6 +136,54 @@ None.
 | TECH-04 | 1 | 0 | 0 | 100.0% | 100.0% |
 
 ## Per-rule exceptions — Prompt ablation (no identification examples)
+
+| rule | TP | FP | FN | precision | recall |
+|---|---|---|---|---|---|
+| ALC-01 | 2 | 0 | 0 | 100.0% | 100.0% |
+| ALC-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| ALC-03 | 2 | 0 | 0 | 100.0% | 100.0% |
+| DOC-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| DOC-03 | 3 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-04 | 1 | 0 | 0 | 100.0% | 100.0% |
+| HOUSE-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| LAUNDRY-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| MCC-01 | 3 | 0 | 0 | 100.0% | 100.0% |
+| MEAL-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-03 | 1 | 0 | 0 | 100.0% | 100.0% |
+| REG-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| TECH-01 | 2 | 0 | 0 | 100.0% | 100.0% |
+| TECH-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| TECH-04 | 1 | 0 | 0 | 100.0% | 100.0% |
+
+## Per-rule exceptions — Second model (Gemini 2.5 Flash)
+
+| rule | TP | FP | FN | precision | recall |
+|---|---|---|---|---|---|
+| ALC-01 | 2 | 0 | 0 | 100.0% | 100.0% |
+| ALC-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| ALC-03 | 2 | 0 | 0 | 100.0% | 100.0% |
+| DOC-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| DOC-03 | 3 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| GIFT-04 | 1 | 0 | 0 | 100.0% | 100.0% |
+| HOUSE-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| LAUNDRY-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| MCC-01 | 3 | 0 | 0 | 100.0% | 100.0% |
+| MEAL-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| PERS-03 | 1 | 0 | 0 | 100.0% | 100.0% |
+| REG-01 | 1 | 0 | 0 | 100.0% | 100.0% |
+| TECH-01 | 2 | 0 | 0 | 100.0% | 100.0% |
+| TECH-02 | 1 | 0 | 0 | 100.0% | 100.0% |
+| TECH-04 | 1 | 0 | 0 | 100.0% | 100.0% |
+
+## Per-rule exceptions — Two-model agreement as EXC-03 confidence
 
 | rule | TP | FP | FN | precision | recall |
 |---|---|---|---|---|---|

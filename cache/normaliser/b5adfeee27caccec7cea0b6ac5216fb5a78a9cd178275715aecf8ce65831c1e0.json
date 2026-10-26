@@ -1,0 +1,33 @@
+{
+  "stage": "normaliser",
+  "prompt_version": "normaliser-v1",
+  "requested_model": "google/gemini-2.5-flash",
+  "meta": {
+    "model": "google/gemini-2.5-flash",
+    "prompt_tokens": 254,
+    "completion_tokens": 62,
+    "cost_usd": 0.0002312
+  },
+  "request": [
+    {
+      "role": "system",
+      "content": "You translate line-item descriptions from itemized receipts into plain English for an expense-audit system.\n\nRules:\n- Translate faithfully. Do not classify, judge, explain, or add information that is not in the text.\n- Keep brand names, product names, model numbers, sizes, volumes and quantities exactly as written (e.g. \"0,2l\", \"128GB\", \"750ml\").\n- Keep the meaning that matters for an auditor: say whether a drink is alcoholic or non-alcoholic only when the original says so (e.g. \"sin alcohol\" -> \"non-alcoholic\").\n- If a word has no clear English equivalent, keep it and add a short gloss in parentheses.\n\nReturn JSON: {\"items\": [{\"line_id\": \"...\", \"text_en\": \"...\"}]} with exactly one entry per input line."
+    },
+    {
+      "role": "user",
+      "content": "{\"items\": [{\"line_id\": \"RCP-019-L1\", \"language\": \"ja\", \"text\": \"iPad Air 11インチ 128GB\"}, {\"line_id\": \"RCP-019-L2\", \"language\": \"ja\", \"text\": \"タブレットケース\"}]}"
+    }
+  ],
+  "response": {
+    "items": [
+      {
+        "line_id": "RCP-019-L1",
+        "text_en": "iPad Air 11-inch 128GB"
+      },
+      {
+        "line_id": "RCP-019-L2",
+        "text_en": "Tablet case"
+      }
+    ]
+  }
+}

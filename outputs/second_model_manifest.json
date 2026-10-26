@@ -1,0 +1,27 @@
+{
+  "model": "google/gemini-2.5-flash",
+  "temperature": 0.0,
+  "confidence_threshold": 0.5,
+  "prompt_versions": {
+    "normaliser": "normaliser-v1",
+    "classifier": "classifier-v1"
+  },
+  "llm_calls": 37,
+  "prompt_tokens": 39078,
+  "completion_tokens": 7505,
+  "cost_usd": 0.025991,
+  "by_stage": {
+    "classifier": {
+      "calls": 31,
+      "prompt_tokens": 37588,
+      "completion_tokens": 7172,
+      "cost_usd": 0.024712
+    },
+    "normaliser": {
+      "calls": 6,
+      "prompt_tokens": 1490,
+      "completion_tokens": 333,
+      "cost_usd": 0.001279
+    }
+  }
+}
