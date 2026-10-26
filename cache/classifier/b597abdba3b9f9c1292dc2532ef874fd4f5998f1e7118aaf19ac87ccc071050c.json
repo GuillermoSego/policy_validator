@@ -1,0 +1,61 @@
+{
+  "stage": "classifier",
+  "prompt_version": "classifier-v1",
+  "requested_model": "anthropic/claude-haiku-4.5",
+  "meta": {
+    "model": "anthropic/claude-haiku-4.5",
+    "prompt_tokens": 1955,
+    "completion_tokens": 295,
+    "cost_usd": 0.00343
+  },
+  "request": [
+    {
+      "role": "system",
+      "content": "You classify line items on business expense receipts for an audit team. For every line you say WHAT the item is. You never decide whether it is allowed — a separate rule engine does that.\n\n## Categories (use exactly one of these names)\n- alcohol: beer, wine, spirits, cocktails, corkage\n- tobacco: cigarettes, cigars, vaping products\n- personal_electronics: headphones, tablets, smart watches, cameras, trackers, and accessories made for them (cases, chargers)\n- gift: items made to be given: flowers, gift baskets, greeting cards, branded merchandise\n- gift_card: gift cards, prepaid cards, vouchers\n- household_goods: cleaning supplies, paper towels, kitchenware, drinkware, bedding, home décor\n- personal_care: toiletries, cosmetics, haircuts, spa and massage\n- clothing: apparel, footwear, fashion accessories (belts, ties, bags)\n- gambling: casino chips, betting stakes, lottery\n- jewelry: non-electronic watches, bracelets, precious metal items\n- food_beverage: meals, non-alcoholic drinks, snacks, catering\n- computer_accessory: cables, adapters, docks, mice, keyboards, monitors\n- office_supplies: stationery, notebooks, printing, shipping\n- lodging: room charges, resort fees, lodging tax\n- ground_transport: taxi, rideshare, transit, parking, tolls, fuel\n- airfare: tickets, seat and bag fees\n- laundry_service: laundry, dry cleaning, pressing\n- health_otc: over-the-counter medication, cough and throat lozenges, first aid\n- software_subscription: SaaS and software licences\n- service_fee: service charge, gratuity, delivery fee, booking fee\n- other: anything that fits nothing above, including a non-itemized charge whose contents are unknown; explain it in the output\n\n## How to classify\n1. Classify by the nature of the item purchased, not by the words in its name.\n   - Food prepared with alcohol (beer-battered fish, wine sauce, rum cake) is food_beverage.\n   - Non-alcoholic cocktails and mixed drinks (a virgin mojito, an Arnold Palmer) are food_beverage.\n   - A drink or ingredient that is itself alcoholic (beer, wine, spirits) is alcohol, whatever it is used for and wherever it was bought.\n   - Barware and drinkware are household_goods.\n2. Accessories made for a personal device (cases, chargers, screen protectors) are personal_electronics. Computer peripherals (cables, adapters, docks, mice, keyboards, monitors) are computer_accessory. Recognise branded products by what they are, not by the brand.\n3. Gratuity, tip, service charge, delivery and booking fees are service_fee.\n4. A line that only says a total was charged with no itemization is other.\n5. The declared expense type can be wrong — it is context, not the answer. Classify what the line actually is.\n6. Use other only when nothing else fits, and say why in the rationale.\n\n## Item facts (report them exactly; do not infer beyond the text)\n- is_gift: true if the item was bought to be given to someone else (the line names who it is for, or the item is a gift by nature such as flowers, a gift basket or a greeting card). Food and drink consumed at a meal are not gifts.\n- recipient: the person or organisation the line says the item is for or provided to (a guest, a gift recipient); null if none is named.\n- recipient_type: government_official (any government official, public employee, public agency or state-owned enterprise employee), client (client, customer, prospect, partner), employee (a colleague or staff member of the employee's own company), self, or unknown.\n- is_prescription: true only for prescription medication.\n- is_mobile_handset: true only for mobile phone hardware (not accessories).\n- is_entertainment_venue: true for tickets or fees for golf, sporting events, theatre, concerts or similar venues.\n\n## Confidence\nA number from 0 to 1 that the category is right:\n- 0.9-1.0: unambiguous.\n- 0.7-0.89: very likely; minor ambiguity.\n- 0.5-0.69: plausible, but another category is a real possibility.\n- below 0.5: you cannot tell what the item is.\n\nKeep each rationale under 15 words. Return one entry per input line, in input order."
+    },
+    {
+      "role": "user",
+      "content": "{\"receipt\": {\"merchant_name\": \"Sterling Chophouse\", \"mcc\": \"5812\", \"mcc_description\": \"Eating places and restaurants\", \"declared_expense_type\": \"Client Entertainment\", \"attendee_count\": 2, \"currency\": \"USD\"}, \"items\": [{\"line_id\": \"RCP-015-L1\", \"text_en\": \"Chef tasting menu\", \"text_original\": \"Chef tasting menu\", \"language\": \"en\", \"quantity\": 2.0, \"unit_price\": 124.0}, {\"line_id\": \"RCP-015-L2\", \"text_en\": \"Barolo 2016 bottle\", \"text_original\": \"Barolo 2016 bottle\", \"language\": \"en\", \"quantity\": 1.0, \"unit_price\": 110.0}, {\"line_id\": \"RCP-015-L3\", \"text_en\": \"Gratuity 20%\", \"text_original\": \"Gratuity 20%\", \"language\": \"en\", \"quantity\": 1.0, \"unit_price\": 71.6}]}"
+    }
+  ],
+  "response": {
+    "items": [
+      {
+        "line_id": "RCP-015-L1",
+        "category": "food_beverage",
+        "confidence": 0.95,
+        "is_gift": false,
+        "recipient": null,
+        "recipient_type": "unknown",
+        "is_prescription": false,
+        "is_mobile_handset": false,
+        "is_entertainment_venue": false,
+        "rationale": "Chef tasting menu is a prepared meal consumed at restaurant."
+      },
+      {
+        "line_id": "RCP-015-L2",
+        "category": "alcohol",
+        "confidence": 0.98,
+        "is_gift": false,
+        "recipient": null,
+        "recipient_type": "unknown",
+        "is_prescription": false,
+        "is_mobile_handset": false,
+        "is_entertainment_venue": false,
+        "rationale": "Barolo is an Italian wine; alcoholic beverage purchased at restaurant."
+      },
+      {
+        "line_id": "RCP-015-L3",
+        "category": "service_fee",
+        "confidence": 0.99,
+        "is_gift": false,
+        "recipient": null,
+        "recipient_type": "unknown",
+        "is_prescription": false,
+        "is_mobile_handset": false,
+        "is_entertainment_venue": false,
+        "rationale": "Gratuity is a service charge; tip on restaurant bill."
+      }
+    ]
+  }
+}
