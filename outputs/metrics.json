@@ -1,0 +1,877 @@
+{
+  "scope": {
+    "receipts": 28,
+    "out_of_scope": [
+      "RCP-020",
+      "RCP-021",
+      "RCP-029",
+      "RCP-030"
+    ]
+  },
+  "pipeline": {
+    "classification": {
+      "items": 65,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_category_f1": {
+        "alcohol": 1.0,
+        "clothing": 1.0,
+        "computer_accessory": 1.0,
+        "food_beverage": 1.0,
+        "gift": 1.0,
+        "gift_card": 1.0,
+        "ground_transport": 1.0,
+        "health_otc": 1.0,
+        "household_goods": 1.0,
+        "jewelry": 1.0,
+        "laundry_service": 1.0,
+        "lodging": 1.0,
+        "office_supplies": 1.0,
+        "other": 1.0,
+        "personal_care": 1.0,
+        "personal_electronics": 1.0,
+        "service_fee": 1.0,
+        "software_subscription": 1.0,
+        "tobacco": 1.0
+      },
+      "restricted_f1": 1.0,
+      "errors": []
+    },
+    "disposition": {
+      "confusion": {
+        "flag": {
+          "flag": 16,
+          "review": 0,
+          "pass": 0
+        },
+        "review": {
+          "flag": 0,
+          "review": 3,
+          "pass": 0
+        },
+        "pass": {
+          "flag": 0,
+          "review": 0,
+          "pass": 9
+        }
+      },
+      "accuracy": 1.0,
+      "false_positives": {
+        "count": 0,
+        "of": 9,
+        "receipts": []
+      },
+      "missed_violations": {
+        "count": 0,
+        "of": 16,
+        "receipts": []
+      },
+      "wrong": []
+    },
+    "exceptions": {
+      "overall": {
+        "tp": 26,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "per_rule": {
+        "ALC-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-03": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-03": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "HOUSE-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "LAUNDRY-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MCC-01": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MEAL-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-03": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "REG-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "evidence_exact": 1.0,
+      "review_signals": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "retriever_recall": 1.0
+    },
+    "threshold_sensitivity": {
+      "0.4": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.5": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.6": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      },
+      "0.7": {
+        "disposition_accuracy": 1.0,
+        "exc_03_signals": 0,
+        "items_below_threshold": 0
+      }
+    },
+    "confidence": {
+      "min_confidence_correct": 0.9,
+      "max_confidence_wrong": null,
+      "histogram": {
+        "0.9": 1,
+        "0.92": 1,
+        "0.95": 50,
+        "0.98": 8,
+        "0.99": 4,
+        "1.0": 1
+      }
+    }
+  },
+  "baseline": {
+    "classification": {
+      "items": 65,
+      "accuracy": 0.8461538461538461,
+      "macro_f1": 0.8694042799305957,
+      "per_category_f1": {
+        "alcohol": 0.4615,
+        "clothing": 1.0,
+        "computer_accessory": 0.8889,
+        "food_beverage": 0.8444,
+        "gift": 1.0,
+        "gift_card": 1.0,
+        "ground_transport": 1.0,
+        "health_otc": 1.0,
+        "household_goods": 0.8571,
+        "jewelry": 1.0,
+        "laundry_service": 0.0,
+        "lodging": 1.0,
+        "office_supplies": 1.0,
+        "other": 0.6667,
+        "personal_care": 1.0,
+        "personal_electronics": 0.8,
+        "service_fee": 1.0,
+        "software_subscription": 1.0,
+        "tobacco": 1.0
+      },
+      "restricted_f1": 0.7804878048780488,
+      "errors": [
+        {
+          "line_id": "RCP-002-L2",
+          "gold": "alcohol",
+          "predicted": "food_beverage",
+          "confidence": 1.0,
+          "text": "Chianti Classico bottle"
+        },
+        {
+          "line_id": "RCP-004-L1",
+          "gold": "food_beverage",
+          "predicted": "alcohol",
+          "confidence": 1.0,
+          "text": "Beer battered cod & chips"
+        },
+        {
+          "line_id": "RCP-004-L3",
+          "gold": "food_beverage",
+          "predicted": "alcohol",
+          "confidence": 1.0,
+          "text": "Mojito sin alcohol"
+        },
+        {
+          "line_id": "RCP-004-L4",
+          "gold": "food_beverage",
+          "predicted": "alcohol",
+          "confidence": 1.0,
+          "text": "Rum cake slice"
+        },
+        {
+          "line_id": "RCP-009-L1",
+          "gold": "laundry_service",
+          "predicted": "household_goods",
+          "confidence": 1.0,
+          "text": "Dry cleaning - 3 shirts, 1 suit"
+        },
+        {
+          "line_id": "RCP-011-L1",
+          "gold": "alcohol",
+          "predicted": "food_beverage",
+          "confidence": 1.0,
+          "text": "Vino tinto Rioja Reserva 750ml"
+        },
+        {
+          "line_id": "RCP-015-L2",
+          "gold": "alcohol",
+          "predicted": "food_beverage",
+          "confidence": 1.0,
+          "text": "Barolo 2016 bottle"
+        },
+        {
+          "line_id": "RCP-019-L2",
+          "gold": "personal_electronics",
+          "predicted": "computer_accessory",
+          "confidence": 1.0,
+          "text": "\u30bf\u30d6\u30ec\u30c3\u30c8\u30b1\u30fc\u30b9"
+        },
+        {
+          "line_id": "RCP-025-L2",
+          "gold": "alcohol",
+          "predicted": "food_beverage",
+          "confidence": 1.0,
+          "text": "Weisswein 0,2l"
+        },
+        {
+          "line_id": "RCP-031-L1",
+          "gold": "laundry_service",
+          "predicted": "other",
+          "confidence": 1.0,
+          "text": "Limpeza a seco - 2 camisas"
+        }
+      ]
+    },
+    "disposition": {
+      "confusion": {
+        "flag": {
+          "flag": 15,
+          "review": 0,
+          "pass": 1
+        },
+        "review": {
+          "flag": 0,
+          "review": 2,
+          "pass": 1
+        },
+        "pass": {
+          "flag": 2,
+          "review": 0,
+          "pass": 7
+        }
+      },
+      "accuracy": 0.8571428571428571,
+      "false_positives": {
+        "count": 2,
+        "of": 9,
+        "receipts": [
+          "RCP-004",
+          "RCP-009"
+        ]
+      },
+      "missed_violations": {
+        "count": 1,
+        "of": 16,
+        "receipts": [
+          "RCP-025"
+        ]
+      },
+      "wrong": [
+        {
+          "receipt_id": "RCP-004",
+          "gold": "pass",
+          "predicted": "flag"
+        },
+        {
+          "receipt_id": "RCP-009",
+          "gold": "pass",
+          "predicted": "flag"
+        },
+        {
+          "receipt_id": "RCP-025",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-031",
+          "gold": "review",
+          "predicted": "pass"
+        }
+      ]
+    },
+    "exceptions": {
+      "overall": {
+        "tp": 22,
+        "fp": 3,
+        "fn": 4,
+        "precision": 0.88,
+        "recall": 0.8461538461538461
+      },
+      "per_rule": {
+        "ALC-01": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 1,
+          "precision": 0.5,
+          "recall": 0.5
+        },
+        "ALC-02": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0
+        },
+        "ALC-03": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 1,
+          "precision": 1.0,
+          "recall": 0.5
+        },
+        "DOC-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-03": {
+          "tp": 3,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.75,
+          "recall": 1.0
+        },
+        "GIFT-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "HOUSE-01": {
+          "tp": 1,
+          "fp": 1,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0
+        },
+        "LAUNDRY-01": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "precision": null,
+          "recall": 0.0
+        },
+        "MCC-01": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MEAL-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-03": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "REG-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "evidence_exact": 0.9545454545454546,
+      "review_signals": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "retriever_recall": 0.9090909090909091
+    }
+  },
+  "oracle": {
+    "classification": {
+      "items": 65,
+      "accuracy": 1.0,
+      "macro_f1": 1.0,
+      "per_category_f1": {
+        "alcohol": 1.0,
+        "clothing": 1.0,
+        "computer_accessory": 1.0,
+        "food_beverage": 1.0,
+        "gift": 1.0,
+        "gift_card": 1.0,
+        "ground_transport": 1.0,
+        "health_otc": 1.0,
+        "household_goods": 1.0,
+        "jewelry": 1.0,
+        "laundry_service": 1.0,
+        "lodging": 1.0,
+        "office_supplies": 1.0,
+        "other": 1.0,
+        "personal_care": 1.0,
+        "personal_electronics": 1.0,
+        "service_fee": 1.0,
+        "software_subscription": 1.0,
+        "tobacco": 1.0
+      },
+      "restricted_f1": 1.0,
+      "errors": []
+    },
+    "disposition": {
+      "confusion": {
+        "flag": {
+          "flag": 16,
+          "review": 0,
+          "pass": 0
+        },
+        "review": {
+          "flag": 0,
+          "review": 3,
+          "pass": 0
+        },
+        "pass": {
+          "flag": 0,
+          "review": 0,
+          "pass": 9
+        }
+      },
+      "accuracy": 1.0,
+      "false_positives": {
+        "count": 0,
+        "of": 9,
+        "receipts": []
+      },
+      "missed_violations": {
+        "count": 0,
+        "of": 16,
+        "receipts": []
+      },
+      "wrong": []
+    },
+    "exceptions": {
+      "overall": {
+        "tp": 26,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "per_rule": {
+        "ALC-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "ALC-03": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "DOC-03": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "GIFT-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "HOUSE-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "LAUNDRY-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MCC-01": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "MEAL-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "PERS-03": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "REG-01": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-01": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-02": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "TECH-04": {
+          "tp": 1,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      },
+      "evidence_exact": 1.0,
+      "review_signals": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "retriever_recall": 1.0
+    }
+  },
+  "legacy_keyword_flagging": {
+    "disposition": {
+      "confusion": {
+        "flag": {
+          "flag": 11,
+          "review": 0,
+          "pass": 5
+        },
+        "review": {
+          "flag": 0,
+          "review": 0,
+          "pass": 3
+        },
+        "pass": {
+          "flag": 2,
+          "review": 0,
+          "pass": 7
+        }
+      },
+      "accuracy": 0.6428571428571429,
+      "false_positives": {
+        "count": 2,
+        "of": 9,
+        "receipts": [
+          "RCP-004",
+          "RCP-009"
+        ]
+      },
+      "missed_violations": {
+        "count": 5,
+        "of": 16,
+        "receipts": [
+          "RCP-011",
+          "RCP-015",
+          "RCP-023",
+          "RCP-025",
+          "RCP-026"
+        ]
+      },
+      "wrong": [
+        {
+          "receipt_id": "RCP-004",
+          "gold": "pass",
+          "predicted": "flag"
+        },
+        {
+          "receipt_id": "RCP-009",
+          "gold": "pass",
+          "predicted": "flag"
+        },
+        {
+          "receipt_id": "RCP-011",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-015",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-023",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-025",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-026",
+          "gold": "flag",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-028",
+          "gold": "review",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-031",
+          "gold": "review",
+          "predicted": "pass"
+        },
+        {
+          "receipt_id": "RCP-032",
+          "gold": "review",
+          "predicted": "pass"
+        }
+      ]
+    }
+  }
+}
