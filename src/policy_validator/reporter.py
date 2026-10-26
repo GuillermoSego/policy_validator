@@ -1,1 +1,1 @@
-"""5. Exception reporter — turns engine output into reviewer-readable findings citing policy text."""
+"""5. Exception reporter — reviewer-readable findings citing policy text."""
