@@ -11,10 +11,7 @@ import json
 
 from .config import FIXTURES_DIR
 from .data import is_restricted, load_gold, load_receipts
-from .engine import evaluate_batch
 from .models import ClassifiedItem, ItemAttributes, ReceiptResult
-from .reporter import build_result
-from .retriever import retrieve, retrieved_ids
 
 ATTRIBUTES_PATH = FIXTURES_DIR / "oracle_attributes.json"
 
@@ -47,22 +44,6 @@ def oracle_items() -> dict[str, list[ClassifiedItem]]:
 
 
 def run_oracle(threshold: float = 0.5) -> list[ReceiptResult]:
-    receipts = load_receipts()
-    classified = oracle_items()
-    retrieved = {r.receipt_id: retrieve(r, classified[r.receipt_id]) for r in receipts}
-    decisions = evaluate_batch(
-        receipts,
-        classified,
-        threshold,
-        {rid: retrieved_ids(rules) for rid, rules in retrieved.items()},
-    )
-    return [
-        build_result(
-            r,
-            classified[r.receipt_id],
-            decisions[r.receipt_id],
-            retrieved[r.receipt_id],
-            run="oracle",
-        )
-        for r in receipts
-    ]
+    from .pipeline import decide_all
+
+    return decide_all(load_receipts(), oracle_items(), threshold, run="oracle")
