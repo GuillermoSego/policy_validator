@@ -43,6 +43,10 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [032](#adr-032--known-divergence-on-the-split-transaction-pair) | Known divergence on the split-transaction pair | Accepted |
 | [033](#adr-033--threshold-comparisons-at-cent-precision) | Threshold comparisons at cent precision | Accepted |
 | [034](#adr-034--baggage-delay-carve-out-covers-all-personal-care) | Baggage-delay carve-out covers all personal care | Accepted |
+| [035](#adr-035--non-itemized-receipts-bypass-the-classifier) | Non-itemized receipts bypass the classifier | Accepted |
+| [036](#adr-036--prompt-examples-limited-to-policy-and-taxonomy-text) | Prompt examples limited to policy and taxonomy text | Accepted |
+| [037](#adr-037--keep-the-exc-03-threshold-at-05-despite-no-signal) | Keep the EXC-03 threshold at 0.5 despite no signal | Accepted |
+| [038](#adr-038--offline-replay-is-a-test) | Offline replay is a test | Accepted |
 
 ---
 
@@ -388,3 +392,42 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   dataset.
 - **Consequences:** Known limitation; the fix is an `is_essential_toiletry` attribute when real
   baggage-delay references appear.
+
+## ADR-035 — Non-itemized receipts bypass the classifier
+
+- **Status:** Accepted
+- **Context:** EXC-03 and the data dictionary define a non-itemized charge as `other` by definition,
+  never an uncertain category.
+- **Decision:** For `itemized = false` the classifier returns `other` with confidence 1.0 without
+  calling the model.
+- **Consequences:** No spend and no chance of the model "guessing" the contents (the brief: flag the
+  absence of evidence, do not speculate). DOC-01 and the meal rules use the receipt total.
+
+## ADR-036 — Prompt examples limited to policy and taxonomy text
+
+- **Status:** Accepted
+- **Context:** While writing the classifier prompt, two illustrative examples ("cooking wine",
+  "tablet case") turned out to be near-verbatim dataset items (RCP-014, RCP-019); one came from the
+  brief rather than the policy.
+- **Decision:** Removed both before the first paid run. The prompt only uses examples that appear in
+  the taxonomy or the policy documents themselves (the policy's "Note on identification").
+- **Consequences:** Some policy examples still match RCP-004's items; this is legitimate (a
+  production prompt would include the same policy text) and is disclosed in the evaluation.
+
+## ADR-037 — Keep the EXC-03 threshold at 0.5 despite no signal
+
+- **Status:** Accepted
+- **Context:** On the first run every item's self-reported confidence was 0.90–1.00, so any threshold
+  from 0.4 to 0.7 gives identical results.
+- **Decision:** Keep 0.5 as fixed before the run (ADR-004) rather than tune it on data that cannot
+  inform it. Report the finding and the sensitivity table.
+- **Consequences:** EXC-03 is effectively untested on this dataset. The recommended next step is a
+  confidence derived from disagreement between two models or prompts.
+
+## ADR-038 — Offline replay is a test
+
+- **Status:** Accepted
+- **Decision:** `tests/test_llm_stages.py` re-runs the full pipeline with no API key and asserts the
+  output equals the committed `outputs/results.jsonl` and every call was a cache hit.
+- **Consequences:** CI proves on every push that the committed cache and results are complete and
+  consistent; a prompt change without a refreshed cache fails the build.
