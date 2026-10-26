@@ -1,7 +1,7 @@
 [project]
 name = "policy-validator"
 version = "0.1.0"
-description = "Add your description here"
+description = "Classifies expense receipt line items and checks them against written policies with a deterministic rule engine."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -10,3 +10,7 @@ dependencies = [
     "pandas>=2.3.3",
     "scikit-learn>=1.7.2",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
