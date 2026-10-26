@@ -2,13 +2,19 @@
 
 Classifies every line item on an expense receipt, checks the receipt against nine written policies
 with a **deterministic rule engine**, and reports evidence-grounded exceptions with a disposition of
-`flag`, `review` or `pass`. Design decisions: [`docs/ADRs.md`](docs/ADRs.md) (41 ADRs). Brief:
+`flag`, `review` or `pass`. Design decisions: [`docs/ADRs.md`](docs/ADRs.md) (43 ADRs). Brief:
 [`docs/brief.html`](docs/brief.html).
 
 **Result on the 28 scored receipts:** category macro F1 **1.000**, restricted F1 **1.000**,
 dispositions **28/28**, 0 false positives, 0 missed violations, for **$0.10** of model spend.
 **Stretch:** TIME-01…TIME-03 are implemented, and all **32/32** receipts are right, including the
-four timing receipts. On this little data that is a weak claim: see
+four timing receipts.
+
+**Robustness checks:**
+- Removing the policy's examples from the prompt gives the same 32/32.
+- A second model (Gemini 2.5 Flash) gives the same 32/32 and agrees with Haiku on every category.
+
+On this little data even that is a weak claim: see
 [evaluation](docs/evaluation.md#7-the-base-rate-question).
 
 ## Setup and usage
@@ -16,10 +22,11 @@ four timing receipts. On this little data that is a weak claim: see
 ```bash
 uv sync                      # Python ≥3.10, https://docs.astral.sh/uv/
 cp .env.example .env         # set OPENROUTER_API_KEY (only needed for new model calls)
-make test                    # 150 tests: engine, TIME rules, registry, LLM client, replay, metrics, viewer
+make test                    # 164 tests: engine, TIME rules, registry, LLM, replay, metrics, viewer
 make run                     # pipeline -> outputs/results.jsonl (replays the committed cache: $0)
 make oracle baseline         # oracle ablation + keyword baseline
 make ablation                # prompt ablation without the policy's examples (replays cache)
+make crossmodel              # Gemini 2.5 Flash run + two-model agreement (replays cache)
 make evaluate                # -> outputs/metrics.json, outputs/metrics.md
 make viewer                  # Streamlit viewer: uv run streamlit run app/viewer.py
 ```
@@ -36,28 +43,31 @@ receipts.jsonl ─(labels stripped)─► 1 Normaliser ─► 2 Classifier ─�
                                     LLM, non-en only  LLM, 1 call/receipt  deterministic   deterministic   rule text as evidence
 ```
 
-`src/policy_validator/`: **normaliser** (Unicode cleanup; translates non-English lines in one call
-per receipt), **classifier** (category, confidence and item *facts* — gift, recipient and recipient
-type, prescription, mobile handset, entertainment venue; `restricted` comes from the taxonomy, not
-the model), **retriever** (deterministic triggers on categories, facts, MCC, declared type, entity
-and currency; recall-oriented; the engine evaluates only what it returns), **engine** (rules as pure
-functions), **reporter** (rule ID, policy doc, severity, cited lines, policy text, explanation with the
-numbers). `llm.py` adds the SHA-256 response cache, two retries and a hard budget cap. The model
-reads text; code makes every decision (ADR-014).
+The modules in `src/policy_validator/`:
+- **normaliser:** Unicode cleanup; translates non-English lines.
+- **classifier:** category, confidence and item *facts* (gift, recipient type, prescription, handset,
+  venue). `restricted` comes from the taxonomy.
+- **retriever:** deterministic, recall-oriented triggers.
+- **engine:** rules as pure functions.
+- **reporter:** rule, policy doc, severity, cited lines, policy text, and an explanation with the
+  numbers.
+
+`llm.py` adds the response cache, retries and a hard budget cap. The model reads text; code makes
+every decision (ADR-014).
 
 ## Prompts
 
-In [`prompts.py`](src/policy_validator/prompts.py), versioned (the version is in the cache key and on
-every result). **Normaliser:** translate faithfully and keep product names, sizes and quantities —
-never classify, so a wrong category can be attributed to translation *or* classification. The
-**classifier** gets the taxonomy with its examples, the policy's own identification rule ("by the
-nature of the item, not the words in its name", with the policy's examples), a warning that the
-declared expense type may be wrong, strict definitions of each fact, and a confidence rubric. It
-sees the English text, the original text and the receipt context, and it never decides
-allowability. Output is constrained by a JSON schema with the category as an enum and validated with
-Pydantic. Zero-shot: no dataset item is in any prompt (ADR-021, ADR-036). A **prompt ablation**
-that removes the policy's identification examples (beer-battered fish, rum cake…) gives the same
-79/79 items and 32/32 receipts, so the score does not depend on them (ADR-042).
+In [`prompts.py`](src/policy_validator/prompts.py), versioned (the version is part of the cache key).
+
+- **Normaliser:** translates faithfully and never classifies, so an error can be attributed to
+  translation *or* classification.
+- **Classifier:** receives the taxonomy, the policy's identification rule ("by the nature of the
+  item, not the words in its name"), a warning that the declared type may be wrong, fact
+  definitions and a confidence rubric. It sees the original and English text plus the receipt
+  context, and never decides allowability.
+
+Outputs are schema-constrained (category enum) and validated with Pydantic. No dataset item is in
+any prompt (ADR-021, ADR-036). Removing the policy's examples leaves the result unchanged (ADR-042).
 
 ## Policy engine
 
@@ -70,8 +80,10 @@ pre-approval and waives only TECH-02. **Regional overrides:** REG-01 replaces AL
 and REG-02/REG-03 replace MEAL-01. **Cross-receipt rules** use batch aggregates (meal cap per
 employee per day, OTC per trip). **Disposition** is EXC-01 exactly. **Confidence threshold: 0.5.**
 Items below it raise one EXC-03 signal and are excluded from every other rule. In this data every
-item scored ≥ 0.90, so the threshold never fires (ADR-037). Unit tests cover the brief's five cases
-plus boundaries; the oracle (gold categories → same engine) matches all 28 answers exactly.
+item scored ≥ 0.85, so the threshold never fires (ADR-037). Two-model disagreement, measured as
+the alternative, also finds no uncertain item (ADR-043). The EXC-03 path is covered by tests. Unit
+tests cover the brief's five cases plus boundaries and the TIME rules. The oracle (gold categories
+→ same engine) matches all 32 answers exactly.
 
 ## Evaluation summary
 
@@ -81,13 +93,10 @@ plus boundaries; the oracle (gold categories → same engine) matches all 28 ans
 | Disposition accuracy | 28/28 | 24/28 | 18/28 |
 | False positives (of 9) / missed (of 16) | 0 / 0 | 2 / 1 | 2 / 5 |
 
-Confusion matrices, per-rule precision/recall, evidence accuracy (100% exact `line_ids`), retriever
-recall (100%) and threshold sensitivity are in [`outputs/metrics.md`](outputs/metrics.md). The
-keyword baseline fails on other languages and on misleading names. Most of its remaining value comes
-from the engine: without one, accuracy falls to 64%. The two failure cases are v1 errors on the
-timing receipts (RCP-021: MEAL-01 instead of TIME-03; RCP-030: a missed TIME-02 review). Both were
-fixed by implementing TIME-01…TIME-03 (ADR-039; TIME-04 needs trip dates the data lacks). The full
-write-up, including the base-rate question and caveats on the perfect score, is in
+Evidence is exact on 100% of matched exceptions, and retriever recall is 100%. The keyword
+baseline fails on other languages and on misleading names; without the engine it falls to 64%. The
+two failure cases are v1 errors on the timing receipts (RCP-021, RCP-030), fixed by the TIME rules
+(ADR-039). All tables are in [`outputs/metrics.md`](outputs/metrics.md); the write-up is in
 [`docs/evaluation.md`](docs/evaluation.md). AWS design: [`docs/aws-design.md`](docs/aws-design.md).
 
 ## One receipt end to end — RCP-025 (German, EMEA)
@@ -106,42 +115,55 @@ write-up, including the base-rate question and caveats on the perfect score, is 
 
 ## AI collaboration
 
-I used **Claude Code** (Claude Opus 5.5) for the whole build: it interviewed me in three rounds of
-design questions before writing code (the 30 initial ADRs are my answers), then implemented
-milestone by milestone with tests. Things the assistant got wrong and how they were caught:
+I used **Claude Code** (Claude Opus 5.5) throughout. It first put three rounds of design questions
+to me; I reviewed and accepted its recommendations (the 30 initial ADRs). The later scope
+decisions were mine: TIME rules, prompt ablation, second model, closing the project. It
+implemented milestone by milestone, with tests.
 
-- **Leakage:** its first classifier prompt included "cooking wine" and "tablet case" as examples,
-  near-verbatim dataset items. It caught them in a self-review of the prompt before the first paid
-  call and removed them (ADR-036). The lesson: review prompts against the data, not only the code.
-- **Wrong number in the docs:** the evaluation write-up first said "17 gold categories". A
-  cross-check of every quoted figure against `metrics.json` showed 19.
-- **Committed a lint failure** in the engine (an unused loop variable). Ruff caught it and a `[fix]`
-  commit followed. A swallowed-error bug was also fixed before commit: an offline cache miss would
-  have silently fallen back to the untranslated text, so `CacheMiss` was made a separate error type.
+What it got wrong, and how it was caught:
+- **Leakage:** two prompt examples ("cooking wine", "tablet case") were near-verbatim dataset
+  items. A review of the prompt against the data removed them before any paid call (ADR-036).
+- **A wrong figure:** "17 gold categories" in the docs was really 19, found by cross-checking every
+  number against `metrics.json`.
+- **A committed lint failure:** caught by ruff and fixed in a `[fix]` commit.
+- **A swallowed `CacheMiss`:** it would have hidden offline replay gaps; split from retryable errors.
+- **An edit that silently did not apply:** it dropped two systems from the evaluation, and was
+  spotted because the summary printed four systems instead of six.
 
-Checked by hand: <!-- YOU: list what you personally verified, e.g. reading every rule against the
-engine, the RCP-016/RCP-022 outputs, the AWS numbers --> · Where I overruled the assistant:
-<!-- YOU -->
+Checked directly, not taken on trust:
+- The oracle matches all 32 answers.
+- Every figure in the docs matches `metrics.json`.
+- The v1 failures were confirmed in git history.
+- Spend matches the key's usage counter.
+- A fresh clone with no key reproduces every output byte for byte.
 
 **Data sent to services:** receipts and policies went to **Anthropic** (via Claude Code, during
-development) and to **OpenRouter**, which routes to **Anthropic** (Haiku 4.5) for classification.
-No other service received the data.
+development) and to **OpenRouter**, which routed them to **Anthropic** (Haiku 4.5, the pipeline and
+the ablation) and **Google** (Gemini 2.5 Flash, the second-model check). No other service received
+the data.
 
 ## Spend
 
 Model: **`anthropic/claude-haiku-4.5`** at temperature 0, at $1/M input and $5/M output tokens.
 Multilingual text and misleading names need language understanding, not long reasoning, and the
-price allows many runs under the cap. Total spend: **$0.1964**. That is $0.1025 for the
-pipeline (37 calls, 62.8k input / 7.9k output tokens;
-[`run_manifest.json`](outputs/run_manifest.json)) plus $0.0939 for the prompt ablation. It equals
-the sum of the 68 cached responses and the key's usage delta on the OpenRouter dashboard
-($0.0780 → $0.2744).
+price allows many runs under the cap. Gemini 2.5 Flash, used only for the cross-model check, scored
+the same. Production stays on one model because a second doubles calls with no measured gain.
 
-## What I would do next
+**Total spend: $0.2224**:
+- Pipeline: $0.1025 (37 calls, 62.8k input / 7.9k output tokens;
+  [`run_manifest.json`](outputs/run_manifest.json)).
+- Prompt ablation: $0.0939.
+- Second model: $0.0260.
 
-1. Add trip start and end dates to the input so TIME-04 can be implemented (ADR-040).
-2. Replace self-reported confidence with agreement between two models or prompts, so EXC-03 means
-   something (ADR-037).
-3. Run a second model (e.g. Gemini Flash) through the same harness. This tests generalisation
-   beyond one model, and gives the two-model agreement needed for item 2.
-4. Measure precision on a large sample at the real base rate before any production use.
+This equals the sum of the 105 cached responses and the key's usage delta on the OpenRouter
+dashboard ($0.0780 → $0.3004).
+
+## Scope and limitations
+
+- **TIME-04 is not implemented:** the input has no trip dates (ADR-040).
+- **The baggage-delay carve-out** cannot tell essential toiletries from other personal care
+  (ADR-034). It is dormant on this data, which has no baggage-delay references.
+- **EXC-03 is never triggered by the data:** neither self-reported confidence nor two-model
+  agreement found an uncertain item (ADR-037, ADR-043).
+- **All quality figures come from 32 receipts and 79 items.** What they can and cannot support is
+  discussed in the [base-rate section](docs/evaluation.md#7-the-base-rate-question).

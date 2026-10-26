@@ -4,11 +4,15 @@ All numbers are on the **28 in-scope receipts** (65 line items; 9 pass, 16 flag,
 regenerated from committed files with `make evaluate`. Full tables, per-rule precision/recall and the
 confusion matrices for every system are in [`outputs/metrics.md`](../outputs/metrics.md).
 
-Four systems are compared:
+Six systems are compared:
 
 - **Pipeline** — the real system: LLM normaliser + classifier, deterministic retriever and engine.
 - **Prompt ablation** — the pipeline with the classifier prompt's identification examples removed
   (ADR-042), to test whether the score depends on them.
+- **Second model** — the same pipeline run with Gemini 2.5 Flash instead of Claude Haiku 4.5
+  (ADR-043), to test whether the score depends on the model.
+- **Two-model agreement** — Haiku's classification, where an item's confidence is 0 whenever the two
+  models disagree on its category (ADR-043). It tests disagreement as an EXC-03 signal.
 - **Keyword baseline** — an English keyword matcher feeding the *same* retriever and engine
   (ADR-022), so the difference isolates the classifier.
 - **Oracle** — gold categories fed to the engine (ADR-023). An evaluation-only ablation: it measures
@@ -97,11 +101,15 @@ individual travel expense, so the fix could not create false positives on the 28
 **Stretch result:** pipeline and oracle both get all 32 receipts right; the keyword baseline gets
 28/32 (87.5%). TIME-04 is not implemented because the data has no trip dates (ADR-040).
 
-A latent weakness found while evaluating: **self-reported confidence carries no signal
-here.** Every item scored 0.90–1.00 (50 of 65 at exactly 0.95), so the EXC-03 threshold changes
-nothing anywhere between 0.4 and 0.7 (sensitivity table in `outputs/metrics.md`). The threshold of 0.5
-(ADR-004) is therefore untested on this data; on real, messier receipts I would expect it to matter,
-and I would replace self-reported confidence with agreement across two models or two prompts.
+**Confidence and EXC-03 — measured two ways.** Self-reported confidence carries no signal here.
+Every item scored 0.90–1.00 (50 of 65 at exactly 0.95), so the EXC-03 threshold of 0.5 (ADR-004)
+changes nothing anywhere between 0.4 and 0.7 (see the sensitivity table in `outputs/metrics.md`).
+Disagreement between two independent models was measured as the alternative (ADR-043): Gemini 2.5
+Flash also scores 79/79 items and 32/32 receipts, and **the two models agree on every category**.
+They differ only on facts no rule reads, on 19 items. So the agreement-based system is identical to
+the pipeline and raises no EXC-03 signal either. The conclusion is that no item in this dataset is
+ambiguous to either model. The EXC-03 path itself is exercised by tests: a forced disagreement on
+RCP-010's beer turns ALC-01 into an EXC-03 review.
 
 **On the perfect score — tested with a prompt ablation.** The production prompt contains the
 policy's own identification examples (beer-battered fish, rum cake, virgin mojito, Arnold Palmer,
