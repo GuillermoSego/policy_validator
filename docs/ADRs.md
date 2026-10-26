@@ -39,6 +39,10 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [028](#adr-028--english-lines-skip-the-translation-call) | English lines skip the translation call | Accepted |
 | [029](#adr-029--rule-registry-parsed-from-the-policy-markdown) | Rule registry parsed from the policy markdown | Accepted |
 | [030](#adr-030--aws-target-architecture) | AWS target architecture | Accepted |
+| [031](#adr-031--hand-annotated-item-facts-for-the-oracle) | Hand-annotated item facts for the oracle | Accepted |
+| [032](#adr-032--known-divergence-on-the-split-transaction-pair) | Known divergence on the split-transaction pair | Accepted |
+| [033](#adr-033--threshold-comparisons-at-cent-precision) | Threshold comparisons at cent precision | Accepted |
+| [034](#adr-034--baggage-delay-carve-out-covers-all-personal-care) | Baggage-delay carve-out covers all personal care | Accepted |
 
 ---
 
@@ -341,3 +345,46 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   Secrets Manager; DynamoDB for employee-date and trip aggregates (ADR-016); SQS with a DLQ to absorb
   spikes and model outages; CloudWatch for logs and metrics. Cost is estimated from tokens measured in
   our own runs. Details in [`aws-design.md`](aws-design.md).
+
+## ADR-031 — Hand-annotated item facts for the oracle
+
+- **Status:** Accepted
+- **Context:** The oracle (ADR-023) needs the item facts of ADR-014, but gold labels only carry the
+  category and restricted flag. GIFT-01 and GIFT-04 cannot be evaluated without knowing who receives
+  an item.
+- **Decision:** `tests/fixtures/oracle_attributes.json` annotates the four lines whose text names a
+  gift or recipient (RCP-013-L2, RCP-018-L1, RCP-022-L1/L2), by reading the line text, not the
+  answers. It is used only by the oracle.
+- **Consequences:** The oracle measures the engine, not the annotation; the pipeline must extract
+  the same facts itself through the classifier.
+
+## ADR-032 — Known divergence on the split-transaction pair
+
+- **Status:** Accepted
+- **Context:** Without TIME-03 (ADR-013), RCP-020 and RCP-021 (same employee, merchant and day)
+  add up to $145.50 per person, so MEAL-01 fires on both. Per TIME-03 the split rule would replace the
+  meal cap for that group.
+- **Decision:** Accept the divergence in v1: both receipts are out of scope and the MEAL-01 result
+  is correct under the rules that are implemented. It is resolved by implementing TIME-03.
+- **Consequences:** The oracle matches gold on all 28 scored receipts; the four out-of-scope
+  receipts differ exactly where the TIME rules would apply.
+
+## ADR-033 — Threshold comparisons at cent precision
+
+- **Status:** Accepted
+- **Context:** Policies say "above" a cap (strict) and "$10 or more" (inclusive); USD amounts come
+  from float multiplication of FX rates.
+- **Decision:** Every comparison rounds both sides to cents first; "above" is `>`, "or more" is
+  `>=`. Boundary tests pin each case (e.g. $60 of alcohol for two attendees is exactly at the cap).
+- **Consequences:** No float-noise flags at a boundary such as EUR 70 × 1.08.
+
+## ADR-034 — Baggage-delay carve-out covers all personal care
+
+- **Status:** Accepted
+- **Context:** PERS-01's carve-out allows "essential toiletries" with a baggage-delay reference;
+  telling an essential toiletry from, say, a massage would need another item fact.
+- **Decision:** With a valid baggage-delay reference, all `personal_care` and `clothing` lines share
+  the $150 allowance. No baggage-delay prefix is documented (ADR-017), so the path is dormant on this
+  dataset.
+- **Consequences:** Known limitation; the fix is an `is_essential_toiletry` attribute when real
+  baggage-delay references appear.
