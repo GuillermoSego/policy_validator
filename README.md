@@ -22,13 +22,14 @@ On this little data even that is a weak claim: see
 ```bash
 uv sync                      # Python ≥3.10, https://docs.astral.sh/uv/
 cp .env.example .env         # set OPENROUTER_API_KEY (only needed for new model calls)
-make test                    # 164 tests: engine, TIME rules, registry, LLM, replay, metrics, viewer
+make test                    # 183 tests: engine, TIME rules, registry, LLM, replay, metrics, viewer, demo
 make run                     # pipeline -> outputs/results.jsonl (replays the committed cache: $0)
 make oracle baseline         # oracle ablation + keyword baseline
 make ablation                # prompt ablation without the policy's examples (replays cache)
 make crossmodel              # Gemini 2.5 Flash run + two-model agreement (replays cache)
 make evaluate                # -> outputs/metrics.json, outputs/metrics.md
 make viewer                  # Streamlit viewer: uv run streamlit run app/viewer.py
+make demo                    # live demo in the terminal, offline: see docs/demo.md
 ```
 
 Environment: `OPENROUTER_API_KEY` (required for uncached calls), `LLM_MODEL`

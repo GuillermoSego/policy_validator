@@ -1,4 +1,4 @@
-.PHONY: install lint format test run oracle ablation crossmodel baseline evaluate viewer all
+.PHONY: install lint format test run oracle ablation crossmodel baseline evaluate viewer demo all
 
 install:
 	uv sync
@@ -32,5 +32,8 @@ evaluate:
 
 viewer:
 	uv run streamlit run app/viewer.py
+
+demo:
+	uv run validator demo tour
 
 all: run oracle baseline evaluate

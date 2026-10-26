@@ -11,6 +11,9 @@ wheels/
 # Virtual environments
 .venv
 
+# Model answers for custom demo receipts (validator demo custom)
+.demo_cache/
+
 # Secrets — never commit the real key
 .env
 .env.*
