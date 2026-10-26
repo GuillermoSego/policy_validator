@@ -1,0 +1,249 @@
+<title>Expense Validator Junior–Mid Brief</title>
+<style>
+  :root{--paper:#f6f7f9;--card:#fff;--ink:#22303c;--ink-soft:#55636f;--line:#d9dee4;
+    --accent:#0e7c6b;--accent-ink:#0a5c50;--good:#17803d;--warn:#a06008;--bad:#b32e2e;
+    --chip-good-bg:#e2f2e7;--chip-warn-bg:#f8ecd8;--tint:#eef4f2;--code-bg:#eef1f4;
+    --track:#2f6f9f;--track-bg:#e3eef7}
+  body{background:var(--paper);color:var(--ink);font-family:"Charter","Iowan Old Style",Georgia,"Times New Roman",serif;
+    font-size:17px;line-height:1.6;margin:0;padding:3rem 1.25rem 5rem}
+  .wrap{max-width:46rem;margin:0 auto}
+  h1,h2,h3,.eyebrow,.chip,th,.meta,.pillrow,.flow,.track{font-family:"Avenir Next","Segoe UI","Helvetica Neue",system-ui,sans-serif}
+  h1{font-size:2rem;line-height:1.15;margin:.35rem 0 .5rem;text-wrap:balance;font-weight:700;letter-spacing:-.015em}
+  h2{font-size:1.3rem;margin:2.4rem 0 .7rem;letter-spacing:-.01em;text-wrap:balance}
+  h3{font-size:1rem;margin:1.3rem 0 .35rem}
+  p{margin:.55rem 0}
+  .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;font-weight:600;color:var(--accent-ink)}
+  .track{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--track);background:var(--track-bg);border:1px solid #b9d3e8;border-radius:5px;padding:.2rem .6rem;margin-bottom:.6rem}
+  .meta{color:var(--ink-soft);font-size:.85rem}
+  .lede{font-size:1.06rem;color:var(--ink-soft);max-width:62ch}
+  .pillrow{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0 0;font-size:.8rem}
+  .pill{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:.25rem .8rem;color:var(--ink-soft)}
+  .pill b{color:var(--ink);font-weight:600}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1.2rem 1.4rem;margin:1rem 0}
+  .callout{border-left:4px solid var(--accent)}
+  .guide{border-left:4px solid var(--track)}
+  ul,ol{padding-left:1.25rem;margin:.5rem 0} li{margin:.32rem 0}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:.9rem}
+  th,td{text-align:left;padding:.45rem .65rem;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);font-weight:600}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.85em;background:var(--code-bg);padding:.08em .35em;border-radius:4px}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:.9rem 1rem;overflow-x:auto}
+  pre code{background:none;padding:0;font-size:.79rem;line-height:1.5}
+  .chip{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:.12rem .55rem;border-radius:99px;white-space:nowrap;vertical-align:middle;margin-left:.4rem}
+  .chip.must{background:var(--chip-good-bg);color:var(--good)}
+  .chip.opt{background:var(--chip-warn-bg);color:var(--warn)}
+  .checklist li{list-style:none;position:relative;padding-left:.3rem}
+  .checklist{padding-left:1.6rem}
+  .checklist li::before{content:"☐";position:absolute;left:-1.3rem;color:var(--accent-ink)}
+  .note{font-size:.9rem;color:var(--ink-soft)}
+  .flow{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;font-size:.82rem;margin:.8rem 0}
+  .flow span{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:.35rem .7rem}
+  .flow i{color:var(--accent-ink);font-style:normal;font-weight:700}
+  hr{border:none;border-top:1px solid var(--line);margin:2.2rem 0}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="track">Junior–Mid track</div>
+    <div class="eyebrow">Candidate project brief</div>
+    <h1>Expense Policy Validator — Item Classification &amp; Rule Engine</h1>
+    <p class="lede">Build a system that reads itemized expense receipts, classifies every line item into a spend category, checks each receipt against written expense policies, raises evidence-grounded exceptions when a purchase is out of policy — and sketch, on paper, how you would run it on AWS.</p>
+    <div class="pillrow">
+      <span class="pill"><b>Time</b> ≈ 7 hours</span>
+      <span class="pill"><b>AI assistants</b> expected</span>
+      <span class="pill"><b>AWS</b> one-page design</span>
+      <span class="pill"><b>UI</b> minimal viewer</span>
+      <span class="pill"><b>Model access</b> OpenRouter key, any model</span>
+      <span class="pill"><b>Budget</b> under $5</span>
+    </div>
+  </header>
+
+  <h2>1 · Project goal</h2>
+  <p>An audit team at Northwind Global receives thousands of itemized expense receipts. Most are routine. A few contain purchases that break company policy — alcohol on a solo meal, headphones booked as office supplies, a gift card, a spa charge claimed as lodging. Finding them by hand does not scale, and the keyword rules used before this caught the obvious cases while burying reviewers in false alarms.</p>
+  <div class="flow">
+    <span>Receipt</span><i>→</i><span>Normalise</span><i>→</i><span>Classify items</span><i>→</i><span>Find the rules</span><i>→</i><span>Apply the rules</span><i>→</i><span>Report exceptions</span>
+  </div>
+  <p>For each receipt your system produces: a <b>category for every line item</b>, the <b>exceptions</b> it raises (each naming the rule it breaks and the line items involved), any <b>review signals</b>, and a final <b>disposition</b> of <code>flag</code>, <code>review</code>, or <code>pass</code>.</p>
+  <div class="card callout">
+    <p style="margin:0 0 .5rem"><b>How we work.</b> Our team uses AI coding assistants (Claude Code, Cursor, Copilot and similar) every day, and we expect you to build this project the same way. Writing the code is not the test. We are looking at the decisions you make, how you check what the assistant produces, where you overrule it, and how honestly you report all of that.</p>
+    <p style="margin:0"><b>This brief is deliberately detailed.</b> It tells you what to build and what to measure, so you can spend your time building it well. If you fall behind, cut UI polish first and the evaluation last. A small, working, well-measured system beats a large unfinished one.</p>
+  </div>
+
+  <h2>2 · What we provide</h2>
+  <h3>Policy documents — <code>policy-docs/</code></h3>
+  <p>Nine Markdown documents: meals and entertainment, technology and equipment, gifts and awards, non-reimbursable items, merchant category risk, receipt documentation, transaction patterns, regional rules, and approval and exception handling. Every rule has an identifier such as <code>ALC-01</code> or <code>TECH-02</code>. The documents refer to each other, and <code>regional-addendum.md</code> <b>overrides</b> some global rules.</p>
+  <h3>Receipts — <code>receipts.jsonl</code></h3>
+  <p>32 receipts and 79 line items, each with merchant, merchant category code (MCC), timestamp, currency and conversion rate, submitted expense type, attendee count, trip record, and pre-approval reference. Item descriptions appear in English, Spanish, French, German, Portuguese and Japanese. Every receipt comes with the correct answer:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Field</th><th>What it holds</th></tr></thead>
+    <tbody>
+      <tr><td><code>line_items[].labels.category</code></td><td>The correct category for each item, plus a <code>restricted</code> true/false</td></tr>
+      <tr><td><code>labels.expected_exceptions</code></td><td>Each with <code>rule_id</code>, <code>policy_doc</code>, <code>severity</code>, the <code>line_ids</code> involved, and the reason</td></tr>
+      <tr><td><code>labels.review_signals</code></td><td>Softer signals that are <em>not</em> exceptions. Reporting one as a violation counts as a false positive.</td></tr>
+      <tr><td><code>labels.disposition</code></td><td><code>flag</code>, <code>review</code>, or <code>pass</code></td></tr>
+      <tr><td><code>notes</code></td><td>Why the correct answer is what it is, and the trap each receipt contains</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Use the labels — including the <code>notes</code> field — only to evaluate your system, never as input to it or in a prompt.</b></p>
+  <h3>Categories — <code>category-taxonomy.md</code></h3>
+  <p>21 categories, each marked restricted or not. <b>Use this list as given</b> — on this track, ignore the file's own invitation to add categories.</p>
+
+  <h3>Data dictionary — <code>README.md</code></h3>
+  <p>Defines every field in the data, the conventions the correct answers follow, and how to compare your output with them. <b>Read it before you start</b> — it settles questions such as who an attendee count includes, and which field holds an approval reference.</p>
+  <h3>What is in scope for this track</h3>
+  <div class="card guide">
+    <p style="margin:0 0 .4rem"><b>Every rule except the four transaction-pattern rules</b> (<code>TIME-01</code> to <code>TIME-04</code> in <code>transaction-pattern-rules.md</code>) is in scope. Those four look at when a transaction happened, whether it belongs to a trip, and how receipts group together — a separate problem, so they are optional here.</p>
+    <p style="margin:0">That means <b>four receipts are out of scope and will not be scored</b>: RCP-020 and RCP-021 (a split transaction across two receipts), RCP-029 (an overnight purchase) and RCP-030 (a meal with no trip record). You will be evaluated on the other <b>28 receipts</b> — 9 that should pass, 16 that should be flagged, and 3 that should go to review. Handling the four timing receipts is a welcome stretch goal.</p>
+  </div>
+
+  <h3>Model access</h3>
+  <p>We will send you an <b>OpenRouter API key</b> with your data. It is OpenAI-compatible: point your client at <code>https://openrouter.ai/api/v1</code>. Use it for generation and, if you like, embeddings. <b>The choice of model is yours</b> — any model OpenRouter offers, and local models are fine for any step. <b>Never commit the key.</b></p>
+  <p><b>Model budget: under $5 in total</b> — the key is capped there, the cap is firm, and we will not top it up. It covers only the model calls your validator makes through the key. Your own coding assistants run on your own accounts, are not counted against it, and should not be routed through this key.</p>
+  <p><b>Our recommendation, not a requirement:</b> an efficient Haiku-class model is plenty for this task. Sending all nine policy documents and the taxonomy along with every receipt is about 190,000 input tokens — well under $1 on a model of that size, so $5 allows many full runs. Larger models cost several times more per run (check the price on OpenRouter's model page first), so the same $5 buys fewer runs. Say in your README which model you chose and why.</p>
+  <ul>
+    <li><b>Cache.</b> Classify each item once and save the result, so re-running your evaluation costs nothing. If the budget runs out, requests simply fail — the cache is your safety net.</li>
+    <li><b>Reproducibility.</b> Set the temperature to 0 where you can, and record the model ID in each result file.</li>
+    <li><b>The data is synthetic.</b> You may paste it into any assistant or model. Your README still says which services received it.</li>
+    <li><b>Spend is visible.</b> We can see the key's usage on the OpenRouter dashboard; the Spend line in your README should roughly match it. The key is revoked after your review session.</li>
+  </ul>
+
+  <h2>3 · Part 1 — The pipeline <span class="chip must">Required · ~2.5 h</span></h2>
+  <p>Build these <b>five components</b>, kept clearly separate in your code:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Component</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><b>1. Normaliser</b></td><td>Cleans line-item text and translates non-English descriptions. How you translate is your call — an LLM step, a translation model, or a multilingual classifier.</td></tr>
+      <tr><td><b>2. Item classifier</b></td><td>Gives each line item a category from the taxonomy, a <code>restricted</code> flag, and a confidence between 0 and 1.</td></tr>
+      <tr><td><b>3. Policy retriever</b></td><td>Finds the rules that could apply to this receipt, using its items, its MCC, and its metadata.</td></tr>
+      <tr><td><b>4. Policy engine</b></td><td>Applies the rules and decides. Covered in Part 2.</td></tr>
+      <tr><td><b>5. Exception reporter</b></td><td>Turns the engine's output into findings a reviewer can read, each citing its rule and the policy text behind it.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="card">
+    <p style="margin:0 0 .4rem"><b>Two things your classifier must get right — and that keyword matching gets wrong.</b></p>
+    <p style="margin:0 0 .4rem"><b>Names can mislead.</b> "Beer-battered cod" is food. An "Arnold Palmer" is iced tea and lemonade. "Rum cake" is dessert. But "cooking wine" from a supermarket really is alcohol. Several receipts exist specifically to catch systems that match on words.</p>
+    <p style="margin:0"><b>Context decides.</b> The same bottle of wine is fine at a documented client dinner, a violation on a solo meal, and never allowed from a liquor store. The classifier only tells you <em>what</em> the item is — the rules and the receipt details tell you whether it is allowed.</p>
+  </div>
+  <p class="note"><b>Tip on retrieval:</b> the policy corpus is small — nine short documents. A simple approach (keyword search, a small embedding index, or even passing the relevant documents straight to the model) is perfectly acceptable. Do not use a vector database.</p>
+
+  <h3>Output format — use this shape</h3>
+  <p>Produce one JSON object per receipt in this shape. You may add fields; do not remove or rename these.</p>
+  <p class="note">Abridged: this shows the shape, not the complete answer for RCP-014 — some items and exceptions are left out.</p>
+  <pre><code>{
+  "receipt_id": "RCP-014",
+  "disposition": "flag",
+  "line_items": [
+    { "line_id": "RCP-014-L1", "description_raw": "Tide Pods laundry detergent 42ct",
+      "category": "household_goods", "restricted": true, "confidence": 0.95 },
+    { "line_id": "RCP-014-L4", "description_raw": "Cooking wine - Marsala 375ml",
+      "category": "alcohol", "restricted": true, "confidence": 0.82 }
+  ],
+  "exceptions": [
+    { "rule_id": "ALC-03", "policy_doc": "meals-and-entertainment-policy.md",
+      "severity": "high", "line_ids": ["RCP-014-L4"],
+      "evidence": "Alcohol purchased from a package store, liquor store, or any other merchant that is not a restaurant, bar or hotel is never reimbursable",
+      "explanation": "Marsala cooking wine bought at a supermarket is retail alcohol." }
+  ],
+  "review_signals": [
+    { "rule_id": "MCC-02", "reason": "MCC 5411 is medium risk; context only, not an exception." }
+  ]
+}</code></pre>
+
+  <h2>4 · Part 2 — The policy engine <span class="chip must">Required · ~1.5 h</span></h2>
+  <p><b>The policy engine must be plain, deterministic code — not an LLM call.</b> The same receipt must always produce the same decision. It takes the classified items, the receipt details, and the retrieved rules, and decides. This is the part of the project you fully own, and we will ask you about it in detail.</p>
+  <p>It must handle:</p>
+  <ul>
+    <li><b>Thresholds on USD amounts.</b> Meal caps per person, alcohol caps per attendee, the $200 limit per equipment item, the $50 gift cap. Convert foreign currency first, using the rate on the receipt.</li>
+    <li><b>Carve-outs that need evidence.</b> Some rules allow an exception only when something is recorded — a pre-approval, a baggage-delay reference, an attendee count. If it is missing, the carve-out does not apply.</li>
+    <li><b>Regional overrides.</b> Where <code>regional-addendum.md</code> conflicts with a global rule, the regional rule wins.</li>
+    <li><b>Disposition.</b> Rule <code>EXC-01</code> in <code>approval-and-exception-handling.md</code> says exactly how exceptions turn into <code>flag</code>, <code>review</code> or <code>pass</code>. Implement it exactly — do not let a model decide it.</li>
+    <li><b>Low confidence.</b> Rule <code>EXC-03</code> says that when the classifier is unsure about an item, you raise a review signal instead of an exception. Pick a confidence threshold, and state the number you chose in your README. No correct answer uses <code>EXC-03</code> — the answers assume every category is known — so each <code>EXC-03</code> signal you raise counts as unmatched, as does any change it makes to a disposition. The data dictionary explains this.</li>
+  </ul>
+  <h3>Unit tests — write at least 3</h3>
+  <p>Cover at least three of these cases, each of which has a matching receipt in the data:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Test case</th><th>Receipt</th><th>Expected behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>A carve-out without its evidence</td><td>RCP-027</td><td>Clothing with no baggage-delay reference is still an exception</td></tr>
+      <tr><td>A regional override</td><td>RCP-016</td><td>The APAC alcohol rule applies even though the global rules would allow it</td></tr>
+      <tr><td>A threshold boundary</td><td>RCP-006 and RCP-026</td><td>A $189 dock passes; a $329 monitor without pre-approval does not</td></tr>
+      <tr><td>The severity ladder</td><td>RCP-031</td><td>A single low-severity exception gives <code>review</code>, not <code>flag</code></td></tr>
+      <tr><td>A review signal on its own</td><td>RCP-028</td><td>A medium-risk MCC with compliant items gives <code>review</code> with no exceptions</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>Commit your outputs.</b> Save your system's result for every receipt as a JSONL file in the repo, so we can re-run your evaluation without calling the model again.</p>
+
+  <h2>5 · Part 3 — Evaluation <span class="chip must">Required · ~1.5 h</span></h2>
+  <p>Report each of these on the 28 in-scope receipts:</p>
+  <ol>
+    <li><b>Classification.</b> Both scored per line item, on the 65 items in the in-scope receipts: macro F1 across categories (the mean of the per-category F1 scores, over the categories that appear in the correct answers, counting a category you never predict as zero precision), and F1 on the <code>restricted</code> decision, with restricted = true as the positive class. Say what each score tells you about whether the policy engine is getting the inputs it needs.</li>
+    <li><b>Disposition.</b> A 3×3 confusion matrix of your <code>flag</code> / <code>review</code> / <code>pass</code> against the correct answers.</li>
+    <li><b>False positives.</b> Of the 9 receipts that should pass, how many did you flag or send to review?</li>
+    <li><b>Missed violations.</b> Of the 16 receipts that should be flagged, how many did you pass or downgrade to review?</li>
+    <li><b>Keyword baseline.</b> Build a simple keyword matcher over restricted words — the kind of system this project replaces — run it on the same receipts, and compare it with yours on the measures above. Say honestly where it does better, if it does.</li>
+    <li><b>Two failure cases.</b> Pick two receipts your system got wrong. For each, say which stage caused it — translation, classification, retrieval, or rule logic — and what you would change.</li>
+    <li><b>The base-rate question.</b> This dataset is unusual: more than half the receipts contain a violation, while a real expense stream has only a few percent. In three or four sentences, say what that does to the false-positive numbers you just reported, and what you would need to measure before trusting this system in production.</li>
+  </ol>
+  <p><span class="chip opt">Optional stretch</span> Precision and recall for each rule; for the exceptions that match an answer, how often they cite exactly the right line items; the four timing receipts.</p>
+
+  <h2>6 · Part 4 — AWS deployment design, on paper <span class="chip must">Required · ~1 h</span></h2>
+  <p>Write <b>one page</b> — a diagram is welcome but not required — describing how you would run your validator as a small, authenticated service on AWS. <b>No code and no deployment</b>; we will talk it through together in the review session. Cover these five things:</p>
+  <ol>
+    <li><b>Architecture.</b> Which AWS services you would use for the API, the compute and the logs, and why. A small serverless design — for example API Gateway in front of Lambda — is a sensible starting point, but the choice is yours.</li>
+    <li><b>The policy documents.</b> Where they would live, and how an updated policy would reach the system.</li>
+    <li><b>Authentication and secrets.</b> How callers would authenticate, and where the OpenRouter key would be stored so it never appears in code.</li>
+    <li><b>Cost.</b> A rough monthly estimate at about 50,000 receipts a day, including the model calls. Show how you got the number.</li>
+    <li><b>Before production.</b> Two or three things you would add before real employees' receipts went through it — for example monitoring, handling a model outage, or protecting personal data.</li>
+  </ol>
+
+  <h2>7 · Part 5 — A simple viewer <span class="chip must">Required · ~0.5 h</span></h2>
+  <p>Build a <b>minimal Streamlit app</b> (Gradio is fine too). You will use it to present your work. It needs three views:</p>
+  <ul>
+    <li><b>Receipt list</b> — every receipt with your disposition next to the correct one, mismatches easy to spot.</li>
+    <li><b>Receipt detail</b> — each line item with its category and confidence, the exceptions raised with the policy text they cite, and the correct answer alongside.</li>
+    <li><b>Metrics</b> — the numbers from Part 3 in one place.</li>
+  </ul>
+  <p class="note">Showing results you already computed is fine — no live model calls needed. Visual polish is not graded.</p>
+
+  <h2>8 · What to submit</h2>
+  <ul class="checklist">
+    <li><b>Working code</b> that runs end to end on the 28 in-scope receipts, including the policy engine's unit tests.</li>
+    <li><b>Committed outputs</b> — your per-receipt results as JSONL.</li>
+    <li><b>Evaluation</b> — the seven items from Part 3.</li>
+    <li><b>AWS design page</b> — the Part 4 write-up.</li>
+    <li><b>The viewer</b> — with a one-line command to launch it.</li>
+    <li><b>Git history</b> — commits that show how the work developed, not one final upload.</li>
+    <li><b>A README of at most 2 pages</b>, with these sections: <b>Architecture</b> · <b>Prompts</b> (the main ones, and why) · <b>Policy engine</b> (how rules are encoded, and your confidence threshold) · <b>Evaluation summary</b> · <b>AI collaboration</b> (see below) · <b>Spend</b> (roughly what you spent on models, and which model you chose and why) · <b>What I would do next</b>. Also say which services received the receipt or policy data (your assistants, OpenRouter, anything else), and walk through one receipt end to end.</li>
+    <li><b>AI collaboration notes</b> — which assistants you used and for what, at least one concrete thing an assistant got wrong and how you caught it, and what you checked by hand. "It made no mistakes" is not a believable answer.</li>
+  </ul>
+  <p class="note">Submit a GitHub repo or ZIP, with setup steps and the environment variables needed (for example <code>OPENROUTER_API_KEY</code>).</p>
+
+  <h2>9 · What we look at</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>We care about</th><th>We are not grading</th></tr></thead>
+    <tbody><tr>
+      <td><ul style="margin:0">
+        <li><b>Correct classification</b> — especially the items whose names mislead</li>
+        <li><b>A correct, tested policy engine</b> — thresholds, carve-outs, overrides, disposition</li>
+        <li><b>Evidence</b> — every exception cites its rule and the lines it concerns</li>
+        <li><b>Honest measurement</b> — the required metrics, computed correctly, including where you fall short</li>
+        <li><b>Avoiding false alarms</b> — several receipts look suspicious and are fine</li>
+        <li><b>A sensible AWS design</b> you can explain</li>
+        <li><b>How you worked with AI tools</b></li>
+      </ul></td>
+      <td><ul style="margin:0">
+        <li>Whether you used AI tools (we assume you did)</li>
+        <li>Visual polish</li>
+        <li>Which framework you picked</li>
+        <li>An actual AWS deployment</li>
+        <li>The four timing receipts</li>
+        <li>Perfect scores — honest numbers beat high ones</li>
+      </ul></td>
+    </tr></tbody>
+  </table></div>
+
+  <hr>
+  <p class="note"><b>The review session (90 minutes)</b> has four parts. <b>Your walkthrough, 25–30 minutes:</b> you present the problem, your approach, a demo through your viewer (including a few receipts we pick on the spot), your evaluation results and your AWS design. Plan to fit it into that window — the panel will hold to the time. <b>A technical deep dive, 30–35 minutes:</b> the panel leads, asking about your design decisions and your code — especially the policy engine — along with related ML and data-science concepts, debugging scenarios, and alternatives you considered. <b>Collaboration and role scenarios, 15–20 minutes.</b> <b>Your questions, 10 minutes.</b> Please submit everything at least 24 hours before the session so the panel can review it in advance. There is no live coding and no surprise data; everything is based on what you submitted. Questions before you start are welcome — reply to the message that brought you this brief; we aim to answer within one working day.</p>
+</div>
