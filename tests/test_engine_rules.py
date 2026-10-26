@@ -88,7 +88,7 @@ def test_supermarket_cooking_wine_is_retail_alcohol():
 
 def test_bar_is_on_premise_not_retail():
     items = [item("L1", "alcohol", 20.0)]
-    r = receipt("R", items, mcc="5813", mcc_description="Bars")
+    r = receipt("R", items, mcc="5813", mcc_description="Bars", trip_id="T1", trip_nights=2)
     d = decide_one(r, items)
     assert rule_ids(d) == {"ALC-01"}
     assert signal_ids(d) == {"MCC-02"}
@@ -106,7 +106,13 @@ def test_meal_cap_is_per_person_per_day_across_receipts():
     a = [item("A1", "food_beverage", 40.0)]
     b = [item("B1", "food_beverage", 40.0)]
     ra = receipt("A", a, employee_id="E1")
-    rb = receipt("B", b, employee_id="E1", transaction_datetime="2026-04-14T19:00:00")
+    rb = receipt(
+        "B",
+        b,
+        employee_id="E1",
+        merchant_name="Other Place",
+        transaction_datetime="2026-04-14T19:00:00",
+    )
     decisions = decide((ra, a), (rb, b))
     assert "MEAL-01" in rule_ids(decisions["A"])
     assert "MEAL-01" in rule_ids(decisions["B"])
@@ -356,7 +362,7 @@ def test_reg_04_vat_above_eur_50():
 
 def test_uncertain_item_is_exc_03_and_excluded_from_other_rules():
     items = [item("L1", "alcohol", 18.0, confidence=0.3), item("L2", "food_beverage", 20.0)]
-    d = decide_one(receipt("R", items), items)
+    d = decide_one(receipt("R", items, trip_id="T1", trip_nights=2), items)
     assert d.exceptions == ()
     assert signal_ids(d) == {"EXC-03"}
     assert d.signals[0].line_ids == ("L1",)

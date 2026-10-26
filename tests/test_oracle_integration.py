@@ -61,3 +61,13 @@ def test_every_exception_cites_policy_text(results):
     for result in results.values():
         for exc in result.exceptions:
             assert exc.evidence and exc.policy_doc.endswith(".md")
+
+
+def test_oracle_matches_gold_on_all_32_including_time_rules(results, gold):
+    """Stretch goal: the four timing receipts (TIME-01..TIME-03) are exact too."""
+    for rid, g in gold.items():
+        r = results[rid]
+        assert r.disposition == g.disposition, rid
+        mine = {(e.rule_id, tuple(e.line_ids)) for e in r.exceptions}
+        assert mine == {(e["rule_id"], tuple(e["line_ids"])) for e in g.exceptions}, rid
+        assert {s.rule_id for s in r.review_signals} == {s["rule_id"] for s in g.review_signals}
