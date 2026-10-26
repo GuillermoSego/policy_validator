@@ -70,26 +70,32 @@ without being alcohol — exactly the two failure modes the brief warns about.
 
 ## 6. Two failure cases
 
-The pipeline makes **no errors on the 28 scored receipts**, so the two failures below come from the
-four out-of-scope receipts, which the system still processes. Both are scored here because "no
-errors" on 28 receipts is a weak claim (section 7), and these are real wrong outputs.
+The current system makes no errors on any of the 32 receipts. The two failures below are real wrong
+outputs from **v1**, which was committed before the TIME rules existed. Run `git show
+0db6ecb:outputs/results.jsonl` to see them. They were fixed by implementing TIME-01…TIME-03
+(ADR-039), and the oracle integration test now pins all 32 receipts.
 
-**RCP-021 (and its pair RCP-020) — wrong exception. Stage: rule logic (a rule not implemented).**
-Same employee, same merchant, same day; each receipt is under the $75 cap but together they come to
-$145.50 per person. The engine correctly aggregates per employee-day (ADR-016) and raises
-**MEAL-01** on both; the correct answer is **TIME-03** (split transaction), which per its own text
-replaces the meal cap for the group. Disposition is right (flag), the cited rule is wrong. Fix:
-implement TIME-03 as an engine rule that runs before the meal cap and suppresses MEAL-01 for grouped
-receipts (ADR-032). No model change is needed — classification is perfect on both receipts.
+**RCP-021 (and its pair RCP-020): wrong exception. Stage: rule logic (rule not implemented).**
+Both receipts are from the same employee, at the same merchant, on the same day. Each is under the
+$75 cap, but together they come to $145.50 per person. v1 correctly aggregated meals per employee
+per day (ADR-016) and raised **MEAL-01** on both. The correct answer is **TIME-03** (split
+transaction), which per its own text replaces the meal cap for the group. The disposition was right
+(flag) but the cited rule was wrong. The fix: detect splits in the batch aggregates, raise TIME-03
+on the contributing receipts and suppress the threshold rule it replaces (ADR-041). No model change
+was needed, since classification was already correct.
 
-**RCP-030 — missed review. Stage: retrieval + rule logic (TIME-02 never retrieved or implemented).**
-A solo travel meal with no trip record, on a Saturday. The correct disposition is review with a
-TIME-02 signal; the pipeline passes it because the receipt is otherwise clean. This is the riskier
-failure of the two — a silent pass — and it shows the retriever's blind spot by design: a rule that
-is not in its trigger tables can never fire, however good the classifier. Fix: add TIME-02 to the
-engine and a retrieval trigger on `trip_id is null` for individual meals.
+**RCP-030: missed review. Stage: retrieval and rule logic (TIME-02 neither retrieved nor
+implemented).** This is a solo travel meal with no trip record, on a Saturday. v1 passed it because
+the receipt is otherwise clean. It was the riskier of the two failures, a silent pass, and it shows
+the retriever's blind spot by design: a rule missing from its trigger tables can never fire, however
+good the classifier is. The fix: a TIME-02 rule, plus a retrieval trigger on the individual travel
+expense types. **Before** implementing it, I checked that no scored receipt is a trip-less
+individual travel expense, so the fix could not create false positives on the 28 receipts.
 
-A third, latent weakness found while evaluating: **self-reported confidence carries no signal
+**Stretch result:** pipeline and oracle both get all 32 receipts right; the keyword baseline gets
+28/32 (87.5%). TIME-04 is not implemented because the data has no trip dates (ADR-040).
+
+A latent weakness found while evaluating: **self-reported confidence carries no signal
 here.** Every item scored 0.90–1.00 (50 of 65 at exactly 0.95), so the EXC-03 threshold changes
 nothing anywhere between 0.4 and 0.7 (sensitivity table in `outputs/metrics.md`). The threshold of 0.5
 (ADR-004) is therefore untested on this data; on real, messier receipts I would expect it to matter,

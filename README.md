@@ -2,19 +2,21 @@
 
 Classifies every line item on an expense receipt, checks the receipt against nine written policies
 with a **deterministic rule engine**, and reports evidence-grounded exceptions with a disposition of
-`flag`, `review` or `pass`. Design decisions: [`docs/ADRs.md`](docs/ADRs.md) (38 ADRs). Brief:
+`flag`, `review` or `pass`. Design decisions: [`docs/ADRs.md`](docs/ADRs.md) (41 ADRs). Brief:
 [`docs/brief.html`](docs/brief.html).
 
 **Result on the 28 scored receipts:** category macro F1 **1.000**, restricted F1 **1.000**,
 dispositions **28/28**, 0 false positives, 0 missed violations, for **$0.10** of model spend.
-On 28 receipts that is a weak claim: see [evaluation](docs/evaluation.md#7-the-base-rate-question).
+**Stretch:** TIME-01…TIME-03 are implemented, and all **32/32** receipts are right, including the
+four timing receipts. On this little data that is a weak claim: see
+[evaluation](docs/evaluation.md#7-the-base-rate-question).
 
 ## Setup and usage
 
 ```bash
 uv sync                      # Python ≥3.10, https://docs.astral.sh/uv/
 cp .env.example .env         # set OPENROUTER_API_KEY (only needed for new model calls)
-make test                    # 139 tests: engine, registry, LLM client, replay, metrics, viewer
+make test                    # 150 tests: engine, TIME rules, registry, LLM client, replay, metrics, viewer
 make run                     # pipeline -> outputs/results.jsonl (replays the committed cache: $0)
 make oracle baseline         # ablation + keyword baseline
 make evaluate                # -> outputs/metrics.json, outputs/metrics.md
@@ -79,8 +81,9 @@ plus boundaries; the oracle (gold categories → same engine) matches all 28 ans
 Confusion matrices, per-rule precision/recall, evidence accuracy (100% exact `line_ids`), retriever
 recall (100%) and threshold sensitivity are in [`outputs/metrics.md`](outputs/metrics.md). The
 keyword baseline fails on other languages and on misleading names. Most of its remaining value comes
-from the engine: without one, accuracy falls to 64%. Both failure cases are out-of-scope TIME-rule
-receipts (RCP-021: MEAL-01 raised instead of TIME-03; RCP-030: missed TIME-02 review). The full
+from the engine: without one, accuracy falls to 64%. The two failure cases are v1 errors on the
+timing receipts (RCP-021: MEAL-01 instead of TIME-03; RCP-030: a missed TIME-02 review). Both were
+fixed by implementing TIME-01…TIME-03 (ADR-039; TIME-04 needs trip dates the data lacks). The full
 write-up, including the base-rate question and caveats on the perfect score, is in
 [`docs/evaluation.md`](docs/evaluation.md). AWS design: [`docs/aws-design.md`](docs/aws-design.md).
 
@@ -90,7 +93,8 @@ write-up, including the base-rate question and caveats on the perfect score, is 
    with dumplings" (one call; English receipts make none).
 2. **Classifier:** L2 `alcohol` (0.98), L1 and L3 `food_beverage` (0.95).
 3. **Retriever:** documentation and MCC rules, the meal rules (MEAL-01/02 plus REG-03 as the EMEA
-   override), ALC-01/02/03 (alcohol present), DOC-04 and REG-04 (EUR, EMEA).
+   override), ALC-01/02/03 (alcohol present), DOC-04 and REG-04 (EUR, EMEA), and TIME-01/02/03
+   (timing, individual meal, splits).
 4. **Engine:** MCC 5812 is on-premise, so the alcohol rules apply. The receipt is declared *Meals -
    Individual* with no attendee count, so **ALC-01 (high)** fires on L2. REG-03: $37.80 per person
    is under EUR 70 × 1.08 = $75.60. REG-04: EUR 35 is not above EUR 50.
@@ -130,7 +134,7 @@ OpenRouter dashboard ($0.0780 → $0.1804).
 
 ## What I would do next
 
-1. Implement TIME-01…TIME-04, which fixes both failure cases (ADR-032).
+1. Add trip start and end dates to the input so TIME-04 can be implemented (ADR-040).
 2. Replace self-reported confidence with agreement between two models or prompts, so EXC-03 means
    something (ADR-037).
 3. Run a prompt ablation without the policy's examples, and a second model, to test how well the
