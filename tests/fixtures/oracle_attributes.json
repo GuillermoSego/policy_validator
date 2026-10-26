@@ -1,0 +1,7 @@
+{
+  "_comment": "Hand annotation for the oracle ablation (ADR-023). Gold labels carry categories but not the item facts of ADR-014, so the few facts the policies need are annotated here by reading the line text. Evaluation only — never pipeline input.",
+  "RCP-013-L2": {"is_gift": true},
+  "RCP-018-L1": {"is_gift": true, "recipient": "A. Moreau", "recipient_type": "client"},
+  "RCP-022-L1": {"recipient": "R. Delgado", "recipient_type": "government_official"},
+  "RCP-022-L2": {"is_gift": true, "recipient": "R. Delgado", "recipient_type": "government_official"}
+}
