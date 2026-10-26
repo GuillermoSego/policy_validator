@@ -13,6 +13,10 @@ ORACLE_PATH = OUTPUTS_DIR / "oracle_results.jsonl"
 BASELINE_PATH = OUTPUTS_DIR / "baseline_results.jsonl"
 ABLATION_PATH = OUTPUTS_DIR / "ablation_no_examples_results.jsonl"
 ABLATION_MANIFEST_PATH = OUTPUTS_DIR / "ablation_no_examples_manifest.json"
+SECOND_MODEL = "google/gemini-2.5-flash"
+SECOND_MODEL_PATH = OUTPUTS_DIR / "second_model_results.jsonl"
+SECOND_MODEL_MANIFEST_PATH = OUTPUTS_DIR / "second_model_manifest.json"
+AGREEMENT_PATH = OUTPUTS_DIR / "agreement_results.jsonl"
 MANIFEST_PATH = OUTPUTS_DIR / "run_manifest.json"
 METRICS_JSON = OUTPUTS_DIR / "metrics.json"
 METRICS_MD = OUTPUTS_DIR / "metrics.md"
@@ -75,6 +79,48 @@ def cmd_ablation(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_crossmodel(args: argparse.Namespace) -> int:
+    import dataclasses
+
+    from .agreement import agreement_items
+    from .data import load_receipts
+    from .llm import BudgetExceeded, CacheMiss
+    from .pipeline import PROMPT_VERSIONS, decide_all, run_pipeline, write_manifest
+    from .reporter import read_results
+
+    if not RESULTS_PATH.exists():
+        print(f"missing {RESULTS_PATH}; run `validator run` first", file=sys.stderr)
+        return 1
+    settings = dataclasses.replace(load_settings(), model=args.model)
+    try:
+        results, llm = run_pipeline(settings)
+    except (BudgetExceeded, CacheMiss) as exc:
+        print(f"aborted: {exc}", file=sys.stderr)
+        return 1
+    results = [r.model_copy(update={"run": "second_model"}) for r in results]
+    write_results(results, SECOND_MODEL_PATH)
+    write_manifest(SECOND_MODEL_MANIFEST_PATH, settings, llm)
+
+    primary = {r.receipt_id: r for r in read_results(RESULTS_PATH)}
+    secondary = {r.receipt_id: r for r in results}
+    combined = decide_all(
+        load_receipts(),
+        agreement_items(primary, secondary),
+        settings.confidence_threshold,
+        run="agreement",
+        model_id=f"{next(iter(primary.values())).model_id} + {args.model}",
+        prompt_versions=PROMPT_VERSIONS,
+    )
+    write_results(combined, AGREEMENT_PATH)
+    u = llm.usage
+    print(
+        f"second model {args.model}: {len(results)} receipts -> {SECOND_MODEL_PATH}\n"
+        f"two-model agreement -> {AGREEMENT_PATH}\n"
+        f"llm calls {u.calls} (cache hits {u.cache_hits}) · spent this run ${u.new_cost_usd:.4f}"
+    )
+    return 0
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     from .baseline import classify_receipt
     from .data import load_receipts
@@ -106,8 +152,13 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
             print(f"missing {path}; run `validator {name if name != 'pipeline' else 'run'}` first")
             return 1
         systems.append(Scored(name, {r.receipt_id: r for r in read_results(path)}))
-    if ABLATION_PATH.exists():  # optional experiment (ADR-042)
-        systems.append(Scored("ablation", {r.receipt_id: r for r in read_results(ABLATION_PATH)}))
+    for name, path in (
+        ("ablation", ABLATION_PATH),  # ADR-042
+        ("second_model", SECOND_MODEL_PATH),  # ADR-043
+        ("agreement", AGREEMENT_PATH),  # ADR-043
+    ):
+        if path.exists():  # optional experiments
+            systems.append(Scored(name, {r.receipt_id: r for r in read_results(path)}))
     baseline = systems[1].results
     legacy = {rid: legacy_disposition(r.line_items) for rid, r in baseline.items()}
 
@@ -140,6 +191,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser(
         "ablation", help="pipeline with the classifier prompt's examples removed (ADR-042)"
     ).set_defaults(func=cmd_ablation)
+    cross = sub.add_parser(
+        "crossmodel", help="second model + two-model agreement as EXC-03 confidence (ADR-043)"
+    )
+    cross.add_argument("--model", default=SECOND_MODEL)
+    cross.set_defaults(func=cmd_crossmodel)
     sub.add_parser("baseline", help="keyword baseline through the same engine").set_defaults(
         func=cmd_baseline
     )

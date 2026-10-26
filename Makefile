@@ -1,4 +1,4 @@
-.PHONY: install lint format test run oracle ablation baseline evaluate viewer all
+.PHONY: install lint format test run oracle ablation crossmodel baseline evaluate viewer all
 
 install:
 	uv sync
@@ -20,6 +20,9 @@ oracle:
 
 ablation:
 	uv run validator ablation
+
+crossmodel:
+	uv run validator crossmodel
 
 baseline:
 	uv run validator baseline
