@@ -4,9 +4,11 @@ All numbers are on the **28 in-scope receipts** (65 line items; 9 pass, 16 flag,
 regenerated from committed files with `make evaluate`. Full tables, per-rule precision/recall and the
 confusion matrices for every system are in [`outputs/metrics.md`](../outputs/metrics.md).
 
-Three systems are compared:
+Four systems are compared:
 
 - **Pipeline** — the real system: LLM normaliser + classifier, deterministic retriever and engine.
+- **Prompt ablation** — the pipeline with the classifier prompt's identification examples removed
+  (ADR-042), to test whether the score depends on them.
 - **Keyword baseline** — an English keyword matcher feeding the *same* retriever and engine
   (ADR-022), so the difference isolates the classifier.
 - **Oracle** — gold categories fed to the engine (ADR-023). An evaluation-only ablation: it measures
@@ -101,12 +103,18 @@ nothing anywhere between 0.4 and 0.7 (sensitivity table in `outputs/metrics.md`)
 (ADR-004) is therefore untested on this data; on real, messier receipts I would expect it to matter,
 and I would replace self-reported confidence with agreement across two models or two prompts.
 
-**On the perfect score.** The prompt contains the policy's own identification examples
-(beer-battered fish, rum cake, virgin mojito, Arnold Palmer — from `meals-and-entertainment-policy.md`),
-which appear almost verbatim in RCP-004. Using policy text is legitimate — a real deployment would do
-the same — but it means RCP-004 tests instruction following more than generalisation. No dataset
-item is in any prompt (ADR-021); two examples that were too close to dataset items ("cooking wine",
-"tablet case") were removed before the first run.
+**On the perfect score — tested with a prompt ablation.** The production prompt contains the
+policy's own identification examples (beer-battered fish, rum cake, virgin mojito, Arnold Palmer,
+from `meals-and-entertainment-policy.md`), which appear almost verbatim in RCP-004. Using policy
+text is legitimate, but it could mean RCP-004 tests instruction following rather than
+generalisation. So I re-ran the classifier with those examples removed and only the principle kept
+("by the nature of the item, not the words in its name") (ADR-042, `make ablation`, $0.094).
+**The result was identical: 79/79 items, 32/32 receipts.** The only change was confidence on
+"Rum cake slice", which fell from 0.95 to 0.85; the model still answered `food_beverage` ("alcohol
+content minimal after baking"). The examples were not load-bearing on this data. This does not prove
+the classifier generalises beyond 79 items; it only removes the most obvious reason to doubt the
+score. No dataset item is in any prompt (ADR-021). Two examples that were too close to dataset items
+("cooking wine", "tablet case") were removed before the first run (ADR-036).
 
 ## 7. The base-rate question
 

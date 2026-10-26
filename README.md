@@ -18,7 +18,8 @@ uv sync                      # Python ≥3.10, https://docs.astral.sh/uv/
 cp .env.example .env         # set OPENROUTER_API_KEY (only needed for new model calls)
 make test                    # 150 tests: engine, TIME rules, registry, LLM client, replay, metrics, viewer
 make run                     # pipeline -> outputs/results.jsonl (replays the committed cache: $0)
-make oracle baseline         # ablation + keyword baseline
+make oracle baseline         # oracle ablation + keyword baseline
+make ablation                # prompt ablation without the policy's examples (replays cache)
 make evaluate                # -> outputs/metrics.json, outputs/metrics.md
 make viewer                  # Streamlit viewer: uv run streamlit run app/viewer.py
 ```
@@ -54,7 +55,9 @@ nature of the item, not the words in its name", with the policy's examples), a w
 declared expense type may be wrong, strict definitions of each fact, and a confidence rubric. It
 sees the English text, the original text and the receipt context, and it never decides
 allowability. Output is constrained by a JSON schema with the category as an enum and validated with
-Pydantic. Zero-shot: no dataset item is in any prompt (ADR-021, ADR-036).
+Pydantic. Zero-shot: no dataset item is in any prompt (ADR-021, ADR-036). A **prompt ablation**
+that removes the policy's identification examples (beer-battered fish, rum cake…) gives the same
+79/79 items and 32/32 receipts, so the score does not depend on them (ADR-042).
 
 ## Policy engine
 
@@ -128,15 +131,17 @@ No other service received the data.
 
 Model: **`anthropic/claude-haiku-4.5`** at temperature 0, at $1/M input and $5/M output tokens.
 Multilingual text and misleading names need language understanding, not long reasoning, and the
-price allows many runs under the cap. Total spend: **$0.1025** (37 calls, 62.8k input / 7.9k output
-tokens; [`run_manifest.json`](outputs/run_manifest.json)). This matches the key's usage delta on the
-OpenRouter dashboard ($0.0780 → $0.1804).
+price allows many runs under the cap. Total spend: **$0.1964**. That is $0.1025 for the
+pipeline (37 calls, 62.8k input / 7.9k output tokens;
+[`run_manifest.json`](outputs/run_manifest.json)) plus $0.0939 for the prompt ablation. It equals
+the sum of the 68 cached responses and the key's usage delta on the OpenRouter dashboard
+($0.0780 → $0.2744).
 
 ## What I would do next
 
 1. Add trip start and end dates to the input so TIME-04 can be implemented (ADR-040).
 2. Replace self-reported confidence with agreement between two models or prompts, so EXC-03 means
    something (ADR-037).
-3. Run a prompt ablation without the policy's examples, and a second model, to test how well the
-   classifier generalises beyond this dataset.
+3. Run a second model (e.g. Gemini Flash) through the same harness. This tests generalisation
+   beyond one model, and gives the two-model agreement needed for item 2.
 4. Measure precision on a large sample at the real base rate before any production use.

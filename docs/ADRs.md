@@ -50,6 +50,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [039](#adr-039--implement-time-01time-03) | Implement TIME-01…TIME-03 | Accepted |
 | [040](#adr-040--time-04-not-implemented-no-trip-dates-in-the-data) | TIME-04 not implemented: no trip dates in the data | Accepted |
 | [041](#adr-041--time-03-split-semantics) | TIME-03 split semantics | Accepted |
+| [042](#adr-042--prompt-ablation-without-identification-examples) | Prompt ablation without identification examples | Accepted |
 
 ---
 
@@ -475,3 +476,23 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
     replaces is suppressed for them. For gifts, only that recipient's part of GIFT-01 is suppressed.
 - **Consequences:** No double reporting of one breach. Each interpretation is pinned by a test in
   `tests/test_engine_time_rules.py`.
+
+## ADR-042 — Prompt ablation without identification examples
+
+- **Status:** Accepted
+- **Context:** The classifier prompt carries the policy's identification examples (beer-battered
+  fish, rum cake, virgin mojito, Arnold Palmer, barware). Several of these appear almost verbatim in
+  RCP-004, so the perfect score could be instruction-following rather than generalisation (ADR-036).
+- **Decision:** Add a variant prompt, `classifier-v1-no-examples`, identical except for the four
+  example bullets. It keeps the principle "classify by the nature of the item, not the words in its
+  name". Run it through the same normaliser cache, retriever and engine with `validator ablation`,
+  and report it as its own system. A test asserts the variant differs from production only by that
+  block; the production prompt hash was checked unchanged, so its cache stays valid.
+- **Alternatives considered:**
+  - Remove the "nature, not words" principle too. That tests the model's prior rather than the
+    prompt, which is a less useful question.
+  - Use a different model. That is a separate experiment, and confounds prompt with model.
+- **Consequences:** Same result on all 79 items and 32 receipts. The only change is a lower
+  confidence on "Rum cake slice" (0.95 → 0.85, still `food_beverage`). The examples were not
+  load-bearing on this data. Production keeps them: they are policy text and cost nothing. The
+  experiment cost $0.094, and its responses are committed, so it replays offline.
