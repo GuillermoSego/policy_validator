@@ -28,8 +28,9 @@ class LLMError(RuntimeError):
     """The model could not produce a valid answer after all retries."""
 
 
-class CacheMiss(LLMError):
-    """Offline (no API key) and the request is not in the cache."""
+class CacheMiss(RuntimeError):
+    """Offline (no API key) and the request is not in the cache. Never swallowed: an offline run
+    that silently fell back would produce different results from the committed ones."""
 
 
 class BudgetExceeded(RuntimeError):
