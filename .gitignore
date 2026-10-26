@@ -16,9 +16,6 @@ wheels/
 .env.*
 !.env.example
 
-# LLM response cache (regenerable, may be large)
-cache/
-
 # OS / editor
 .DS_Store
 .idea/
