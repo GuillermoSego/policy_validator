@@ -21,7 +21,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [010](#adr-010--ruff-pytest-and-github-actions) | ruff, pytest and GitHub Actions | Accepted |
 | [011](#adr-011--dependency-set) | Dependency set | Accepted |
 | [012](#adr-012--streamlit-viewer-over-committed-outputs) | Streamlit viewer over committed outputs | Accepted |
-| [013](#adr-013--time-01time-04-out-of-scope-for-v1) | TIME-01…TIME-04 out of scope for v1 | Accepted |
+| [013](#adr-013--time-01time-04-out-of-scope-for-v1) | TIME-01…TIME-04 out of scope for v1 | Superseded by ADR-039 |
 | [014](#adr-014--the-llm-extracts-facts-the-engine-decides) | The LLM extracts facts, the engine decides | Accepted |
 | [015](#adr-015--restricted-is-derived-from-the-taxonomy) | `restricted` is derived from the taxonomy | Accepted |
 | [016](#adr-016--batch-aggregates-for-cross-receipt-rules) | Batch aggregates for cross-receipt rules | Accepted |
@@ -40,13 +40,16 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 | [029](#adr-029--rule-registry-parsed-from-the-policy-markdown) | Rule registry parsed from the policy markdown | Accepted |
 | [030](#adr-030--aws-target-architecture) | AWS target architecture | Accepted |
 | [031](#adr-031--hand-annotated-item-facts-for-the-oracle) | Hand-annotated item facts for the oracle | Accepted |
-| [032](#adr-032--known-divergence-on-the-split-transaction-pair) | Known divergence on the split-transaction pair | Accepted |
+| [032](#adr-032--known-divergence-on-the-split-transaction-pair) | Known divergence on the split-transaction pair | Superseded by ADR-039 |
 | [033](#adr-033--threshold-comparisons-at-cent-precision) | Threshold comparisons at cent precision | Accepted |
 | [034](#adr-034--baggage-delay-carve-out-covers-all-personal-care) | Baggage-delay carve-out covers all personal care | Accepted |
 | [035](#adr-035--non-itemized-receipts-bypass-the-classifier) | Non-itemized receipts bypass the classifier | Accepted |
 | [036](#adr-036--prompt-examples-limited-to-policy-and-taxonomy-text) | Prompt examples limited to policy and taxonomy text | Accepted |
 | [037](#adr-037--keep-the-exc-03-threshold-at-05-despite-no-signal) | Keep the EXC-03 threshold at 0.5 despite no signal | Accepted |
 | [038](#adr-038--offline-replay-is-a-test) | Offline replay is a test | Accepted |
+| [039](#adr-039--implement-time-01time-03) | Implement TIME-01…TIME-03 | Accepted |
+| [040](#adr-040--time-04-not-implemented-no-trip-dates-in-the-data) | TIME-04 not implemented: no trip dates in the data | Accepted |
+| [041](#adr-041--time-03-split-semantics) | TIME-03 split semantics | Accepted |
 
 ---
 
@@ -180,7 +183,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 
 ## ADR-013 — TIME-01…TIME-04 out of scope for v1
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-039
 - **Context:** The brief makes the four transaction-pattern rules optional and excludes RCP-020,
   RCP-021, RCP-029 and RCP-030 from scoring.
 - **Decision:** v1 does not implement them. The four receipts are still processed (classification
@@ -364,7 +367,7 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
 
 ## ADR-032 — Known divergence on the split-transaction pair
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-039
 - **Context:** Without TIME-03 (ADR-013), RCP-020 and RCP-021 (same employee, merchant and day)
   add up to $145.50 per person, so MEAL-01 fires on both. Per TIME-03 the split rule would replace the
   meal cap for that group.
@@ -431,3 +434,44 @@ existing entries are never rewritten — a changed decision gets a new ADR that 
   output equals the committed `outputs/results.jsonl` and every call was a cache hit.
 - **Consequences:** CI proves on every push that the committed cache and results are complete and
   consistent; a prompt change without a refreshed cache fails the build.
+
+## ADR-039 — Implement TIME-01…TIME-03
+
+- **Status:** Accepted (supersedes ADR-013 and ADR-032)
+- **Context:** v1 left the transaction-pattern rules out. Its only wrong outputs were on the four
+  timing receipts: MEAL-01 instead of TIME-03 on RCP-020/021, and silent passes on RCP-029/030.
+- **Decision:** Implement TIME-01 (overnight signal), TIME-02 (individual travel expense without a
+  trip, signal) and TIME-03 (split transactions, high exception) as engine rules. TIME-01 and
+  TIME-03 are always retrieved, since they depend on when and where, not what; TIME-02 is retrieved
+  for the individual travel expense types. Scoring stays on the 28 receipts the brief defines; the
+  32-receipt figures are reported separately as the stretch goal.
+- **Consequences:** Pipeline and oracle match the answers on all 32 receipts. The change is purely
+  deterministic: classification came from the cache and cost nothing. Checked beforehand: no other
+  receipt in the data is overnight, trip-less individual travel or part of a same-day group, so the
+  28 scored results cannot change.
+
+## ADR-040 — TIME-04 not implemented: no trip dates in the data
+
+- **Status:** Accepted
+- **Context:** TIME-04 applies "only when the trip record includes" start and end dates. The data
+  dictionary states trip records hold no dates.
+- **Decision:** Do not implement it; the `Receipt` model has no field it could read. A no-op rule
+  would suggest coverage that does not exist.
+- **Consequences:** Adding `trip_start`/`trip_end` to the input would make it a ten-line rule.
+
+## ADR-041 — TIME-03 split semantics
+
+- **Status:** Accepted
+- **Decision:**
+  - A group is the same employee, the same merchant name and the same calendar date. Names are
+    compared after case and whitespace normalisation.
+  - Three thresholds are tested independently:
+    - DOC-01 $75, only when every receipt in the group is non-itemized.
+    - The employee's per-person meal cap, using the same cap logic as MEAL-01, REG-02 and REG-03.
+    - The GIFT-01 $50 cap per named recipient.
+  - A split needs every contributing receipt at or below the threshold and their sum above it. One
+    receipt already above the threshold is an ordinary breach, not a split.
+  - TIME-03 is raised on the receipts that contribute to the split, and the threshold rule it
+    replaces is suppressed for them. For gifts, only that recipient's part of GIFT-01 is suppressed.
+- **Consequences:** No double reporting of one breach. Each interpretation is pinned by a test in
+  `tests/test_engine_time_rules.py`.
