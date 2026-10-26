@@ -20,6 +20,8 @@ Scope: 28 receipts; out of scope: RCP-020, RCP-021, RCP-029, RCP-030.
 | Review-signal recall | 100.0% | 100.0% | 100.0% |
 | Retriever recall (gold rules) | 100.0% | 90.9% | 100.0% |
 
+Stretch — all 32 receipts, including the four timing receipts (TIME-01..TIME-03): Pipeline (LLM): disposition 100.0%, exception recall 100.0%; Keyword baseline + same engine: disposition 87.5%, exception recall 85.7%; Oracle ablation (gold categories): disposition 100.0%, exception recall 100.0%.
+
 Legacy keyword flagging (no engine — flag on any restricted keyword): disposition accuracy 64.3%, false positives 2/9 (RCP-004, RCP-009), missed violations 5/16 (RCP-011, RCP-015, RCP-023, RCP-025, RCP-026).
 
 ## Disposition confusion — Pipeline (LLM)
