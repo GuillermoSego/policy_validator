@@ -212,6 +212,13 @@ def evaluate(
             "disposition": disposition_metrics({k: v.disposition for k, v in r.items()}, gold, ids),
             "exceptions": exception_metrics(r, gold, ids),
         }
+        all_ids = list(gold)  # stretch goal: the four timing receipts included
+        report[scored.system]["stretch_all_32"] = {
+            "disposition": disposition_metrics(
+                {k: v.disposition for k, v in r.items()}, gold, all_ids
+            ),
+            "exceptions": exception_metrics(r, gold, all_ids),
+        }
         if scored.system == "pipeline":
             report[scored.system]["threshold_sensitivity"] = threshold_sensitivity(
                 r, gold, ids, thresholds
@@ -270,6 +277,18 @@ def render_markdown(report: dict) -> str:
     row("Review-signal precision", lambda r: _pct(r["exceptions"]["review_signals"]["precision"]))
     row("Review-signal recall", lambda r: _pct(r["exceptions"]["review_signals"]["recall"]))
     row("Retriever recall (gold rules)", lambda r: _pct(r["exceptions"]["retriever_recall"]))
+
+    lines += [
+        "",
+        "Stretch — all 32 receipts, including the four timing receipts (TIME-01..TIME-03): "
+        + "; ".join(
+            f"{names[s]}: disposition "
+            f"{_pct(report[s]['stretch_all_32']['disposition']['accuracy'])}, exception recall "
+            f"{_pct(report[s]['stretch_all_32']['exceptions']['overall']['recall'])}"
+            for s in systems
+        )
+        + ".",
+    ]
 
     if "legacy_keyword_flagging" in report:
         d = report["legacy_keyword_flagging"]["disposition"]
