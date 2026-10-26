@@ -95,6 +95,11 @@ def money(x: float | None) -> str:
     return "—" if x is None else f"${x:,.2f}"
 
 
+def spend(x: float) -> str:
+    """Model spend is fractions of a cent per receipt: four decimals, never rounded up to $0.01."""
+    return f"${x:,.4f}"
+
+
 def _short(line_id: str) -> str:
     return line_id.rsplit("-", 1)[-1]
 
@@ -541,8 +546,8 @@ def scene_names_lie(world: World) -> None:
     _scene(
         1,
         "Names lie",
-        "RCP-004: four items with alcohol words, none of them alcohol. A keyword system flags it; "
-        "the classifier reads what each item is.",
+        "RCP-004: four items whose names suggest alcohol, none of them alcohol. A keyword system "
+        "flags it; the classifier reads what each item is.",
     )
     rid = "RCP-004"
     keyword_items = {i.line_id: i for i in keyword_classify(world.receipts[rid])}
@@ -695,8 +700,8 @@ def scene_scoreboard(world: World) -> None:
     print()
     say(
         f"model {world.model} · {world.llm_calls} model calls, {world.cache_hits} served from "
-        f"cache · spent this run {money(world.spent_this_run)} · original cost of those answers "
-        f"{money(world.cost_of_responses)}",
+        f"cache · spent this run {spend(world.spent_this_run)} · original cost of those answers "
+        f"{spend(world.cost_of_responses)}",
         3,
     )
     print()
@@ -770,7 +775,7 @@ def cmd_custom(path: Path, llm: LLMClient | None = None) -> ReceiptResult:
         print(
             style(
                 f"\n   model {llm.model} · {usage.calls} calls ({usage.cache_hits} from cache) · "
-                f"spent {money(usage.new_cost_usd)}",
+                f"spent {spend(usage.new_cost_usd)}",
                 "dim",
             )
         )
