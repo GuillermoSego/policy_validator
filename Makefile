@@ -1,4 +1,4 @@
-.PHONY: install lint format test run oracle baseline evaluate viewer all
+.PHONY: install lint format test run oracle ablation baseline evaluate viewer all
 
 install:
 	uv sync
@@ -17,6 +17,9 @@ run:
 
 oracle:
 	uv run validator oracle
+
+ablation:
+	uv run validator ablation
 
 baseline:
 	uv run validator baseline

@@ -14,7 +14,12 @@ from .data import is_restricted
 from .llm import BudgetExceeded, LLMClient, LLMError
 from .models import ClassifiedItem, ItemAttributes, LineItem, Receipt
 from .normaliser import NormalisedLine
-from .prompts import CLASSIFIER_SCHEMA, CLASSIFIER_VERSION, classifier_system
+from .prompts import (
+    CLASSIFIER_NO_EXAMPLES_VERSION,
+    CLASSIFIER_SCHEMA,
+    CLASSIFIER_VERSION,
+    classifier_system,
+)
 
 _ATTRIBUTE_FIELDS = tuple(ItemAttributes.model_fields)
 
@@ -70,7 +75,11 @@ def _user_message(receipt: Receipt, normalised: dict[str, NormalisedLine]) -> st
 
 
 def classify_receipt(
-    receipt: Receipt, normalised: dict[str, NormalisedLine], llm: LLMClient
+    receipt: Receipt,
+    normalised: dict[str, NormalisedLine],
+    llm: LLMClient,
+    *,
+    identification_examples: bool = True,
 ) -> list[ClassifiedItem]:
     if not receipt.itemized:
         return [
@@ -100,8 +109,10 @@ def classify_receipt(
     try:
         rows = llm.complete_json(
             stage="classifier",
-            prompt_version=CLASSIFIER_VERSION,
-            system=classifier_system(),
+            prompt_version=(
+                CLASSIFIER_VERSION if identification_examples else CLASSIFIER_NO_EXAMPLES_VERSION
+            ),
+            system=classifier_system(identification_examples),
             user=_user_message(receipt, normalised),
             schema_name="classification",
             schema=CLASSIFIER_SCHEMA,

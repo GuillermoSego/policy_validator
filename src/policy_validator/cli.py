@@ -11,6 +11,8 @@ from .reporter import format_text, write_results
 RESULTS_PATH = OUTPUTS_DIR / "results.jsonl"
 ORACLE_PATH = OUTPUTS_DIR / "oracle_results.jsonl"
 BASELINE_PATH = OUTPUTS_DIR / "baseline_results.jsonl"
+ABLATION_PATH = OUTPUTS_DIR / "ablation_no_examples_results.jsonl"
+ABLATION_MANIFEST_PATH = OUTPUTS_DIR / "ablation_no_examples_manifest.json"
 MANIFEST_PATH = OUTPUTS_DIR / "run_manifest.json"
 METRICS_JSON = OUTPUTS_DIR / "metrics.json"
 METRICS_MD = OUTPUTS_DIR / "metrics.md"
@@ -52,6 +54,27 @@ def cmd_oracle(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ablation(args: argparse.Namespace) -> int:
+    from .llm import BudgetExceeded, CacheMiss
+    from .pipeline import ABLATION_PROMPT_VERSIONS, run_pipeline, write_manifest
+
+    settings = load_settings()
+    try:
+        results, llm = run_pipeline(settings, identification_examples=False)
+    except (BudgetExceeded, CacheMiss) as exc:
+        print(f"aborted: {exc}", file=sys.stderr)
+        return 1
+    write_results(results, ABLATION_PATH)
+    write_manifest(ABLATION_MANIFEST_PATH, settings, llm, ABLATION_PROMPT_VERSIONS)
+    u = llm.usage
+    print(
+        f"prompt ablation (no identification examples): {len(results)} receipts -> "
+        f"{ABLATION_PATH}\nllm calls {u.calls} (cache hits {u.cache_hits}) · spent this run "
+        f"${u.new_cost_usd:.4f}"
+    )
+    return 0
+
+
 def cmd_baseline(args: argparse.Namespace) -> int:
     from .baseline import classify_receipt
     from .data import load_receipts
@@ -83,13 +106,15 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
             print(f"missing {path}; run `validator {name if name != 'pipeline' else 'run'}` first")
             return 1
         systems.append(Scored(name, {r.receipt_id: r for r in read_results(path)}))
+    if ABLATION_PATH.exists():  # optional experiment (ADR-042)
+        systems.append(Scored("ablation", {r.receipt_id: r for r in read_results(ABLATION_PATH)}))
     baseline = systems[1].results
     legacy = {rid: legacy_disposition(r.line_items) for rid, r in baseline.items()}
 
     report = evaluate(systems, legacy)
     METRICS_JSON.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     METRICS_MD.write_text(render_markdown(report), encoding="utf-8")
-    for name in ("pipeline", "baseline", "oracle"):
+    for name in [s.system for s in systems]:
         c, d = report[name]["classification"], report[name]["disposition"]
         print(
             f"{name:9s} macro-F1 {c['macro_f1']:.3f} · restricted-F1 {c['restricted_f1']:.3f} · "
@@ -112,6 +137,9 @@ def build_parser() -> argparse.ArgumentParser:
     oracle.add_argument("-v", "--verbose", action="store_true")
     oracle.set_defaults(func=cmd_oracle)
 
+    sub.add_parser(
+        "ablation", help="pipeline with the classifier prompt's examples removed (ADR-042)"
+    ).set_defaults(func=cmd_ablation)
     sub.add_parser("baseline", help="keyword baseline through the same engine").set_defaults(
         func=cmd_baseline
     )

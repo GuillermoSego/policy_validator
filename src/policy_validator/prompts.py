@@ -11,6 +11,8 @@ from .data import load_taxonomy
 
 NORMALISER_VERSION = "normaliser-v1"
 CLASSIFIER_VERSION = "classifier-v1"
+# Prompt ablation (ADR-042): identical to classifier-v1 minus the identification examples.
+CLASSIFIER_NO_EXAMPLES_VERSION = "classifier-v1-no-examples"
 
 NORMALISER_SYSTEM = """\
 You translate line-item descriptions from itemized receipts into plain English for an \
@@ -53,7 +55,18 @@ def _taxonomy_table() -> str:
     return "\n".join(rows)
 
 
-def classifier_system() -> str:
+_IDENTIFICATION_EXAMPLES = """
+   - Food prepared with alcohol (beer-battered fish, wine sauce, rum cake) is food_beverage.
+   - Non-alcoholic cocktails and mixed drinks (a virgin mojito, an Arnold Palmer) are food_beverage.
+   - A drink or ingredient that is itself alcoholic (beer, wine, spirits) is alcohol, whatever it \
+is used for and wherever it was bought.
+   - Barware and drinkware are household_goods."""
+
+
+def classifier_system(identification_examples: bool = True) -> str:
+    """The classifier prompt. `identification_examples=False` is the ablation variant: the
+    "nature, not words" principle stays, its worked examples are removed."""
+    examples = _IDENTIFICATION_EXAMPLES if identification_examples else ""
     return f"""\
 You classify line items on business expense receipts for an audit team. For every line you say \
 WHAT the item is. You never decide whether it is allowed — a separate rule engine does that.
@@ -62,12 +75,7 @@ WHAT the item is. You never decide whether it is allowed — a separate rule eng
 {_taxonomy_table()}
 
 ## How to classify
-1. Classify by the nature of the item purchased, not by the words in its name.
-   - Food prepared with alcohol (beer-battered fish, wine sauce, rum cake) is food_beverage.
-   - Non-alcoholic cocktails and mixed drinks (a virgin mojito, an Arnold Palmer) are food_beverage.
-   - A drink or ingredient that is itself alcoholic (beer, wine, spirits) is alcohol, whatever it \
-is used for and wherever it was bought.
-   - Barware and drinkware are household_goods.
+1. Classify by the nature of the item purchased, not by the words in its name.{examples}
 2. Accessories made for a personal device (cases, chargers, screen protectors) are \
 personal_electronics. Computer peripherals (cables, adapters, docks, mice, keyboards, \
 monitors) are computer_accessory. Recognise branded products by what they are, not by the brand.

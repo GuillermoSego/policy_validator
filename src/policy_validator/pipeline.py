@@ -12,18 +12,26 @@ from .engine import evaluate_batch
 from .llm import LLMClient
 from .models import ClassifiedItem, Receipt, ReceiptResult
 from .normaliser import normalise_receipt
-from .prompts import CLASSIFIER_VERSION, NORMALISER_VERSION
+from .prompts import CLASSIFIER_NO_EXAMPLES_VERSION, CLASSIFIER_VERSION, NORMALISER_VERSION
 from .reporter import build_result
 from .retriever import retrieve, retrieved_ids
 
 PROMPT_VERSIONS = {"normaliser": NORMALISER_VERSION, "classifier": CLASSIFIER_VERSION}
+ABLATION_PROMPT_VERSIONS = {
+    "normaliser": NORMALISER_VERSION,
+    "classifier": CLASSIFIER_NO_EXAMPLES_VERSION,
+}
 
 
-def classify_all(receipts: list[Receipt], llm: LLMClient) -> dict[str, list[ClassifiedItem]]:
+def classify_all(
+    receipts: list[Receipt], llm: LLMClient, *, identification_examples: bool = True
+) -> dict[str, list[ClassifiedItem]]:
     classified = {}
     for receipt in receipts:
         normalised = normalise_receipt(receipt, llm)
-        classified[receipt.receipt_id] = classify_receipt(receipt, normalised, llm)
+        classified[receipt.receipt_id] = classify_receipt(
+            receipt, normalised, llm, identification_examples=identification_examples
+        )
     return classified
 
 
@@ -58,22 +66,28 @@ def decide_all(
     ]
 
 
-def run_pipeline(settings: Settings) -> tuple[list[ReceiptResult], LLMClient]:
+def run_pipeline(
+    settings: Settings, *, identification_examples: bool = True
+) -> tuple[list[ReceiptResult], LLMClient]:
+    """The production pipeline, or with `identification_examples=False` the prompt ablation
+    (ADR-042): same normaliser cache, same engine, classifier prompt without its examples."""
     receipts = load_receipts()
     llm = LLMClient(settings)
-    classified = classify_all(receipts, llm)
+    classified = classify_all(receipts, llm, identification_examples=identification_examples)
     results = decide_all(
         receipts,
         classified,
         settings.confidence_threshold,
-        run="pipeline",
+        run="pipeline" if identification_examples else "ablation_no_examples",
         model_id=settings.model,
-        prompt_versions=PROMPT_VERSIONS,
+        prompt_versions=PROMPT_VERSIONS if identification_examples else ABLATION_PROMPT_VERSIONS,
     )
     return results, llm
 
 
-def write_manifest(path: Path, settings: Settings, llm: LLMClient) -> None:
+def write_manifest(
+    path: Path, settings: Settings, llm: LLMClient, prompt_versions: dict[str, str] | None = None
+) -> None:
     """Deterministic run summary: the cost is that of the cached responses the run used, so it
     equals the original spend no matter how many times the run is replayed from cache."""
     u = llm.usage
@@ -81,7 +95,7 @@ def write_manifest(path: Path, settings: Settings, llm: LLMClient) -> None:
         "model": settings.model,
         "temperature": settings.temperature,
         "confidence_threshold": settings.confidence_threshold,
-        "prompt_versions": PROMPT_VERSIONS,
+        "prompt_versions": prompt_versions or PROMPT_VERSIONS,
         "llm_calls": u.calls,
         "prompt_tokens": u.prompt_tokens,
         "completion_tokens": u.completion_tokens,
